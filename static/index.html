@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="TruthGuard AI - Advanced Digital Forensics for detecting synthetic media, deepfakes, and AI-generated content.">
+    <meta name="keywords" content="AI, Cybersecurity, Deepfake Detection, Digital Forensics, Synthetic Media">
+    <meta name="author" content="Lokanath Meher">
+    <title>Threatsys | TruthGuard AI</title>
+    <link rel="icon" type="image/svg+xml" href="/static/images/logo_concept1.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Background glowing orbs for UI depth -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+
+    <header>
+        <div class="brand-container">
+            <img src="/static/images/logo_concept1.svg" alt="TruthGuard AI Logo" class="main-logo">
+            <div class="brand-text">
+                <h1>TruthGuard <span class="ai-glow"></span>AI</span></h1>
+                <span class="cyber-tagline">Advanced Digital Forensics</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="#detect" class="btn-primary">Start Analysis</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <div class="badge-new">
+                    <span class="pulse-dot"></span> Core System Active
+                </div>
+                <h2>Detecting Synthetic Media <span class="text-gradient">in the Age of AI</span></h2>
+                <p class="hero-text">
+                    Combat fraud and misinformation with our state-of-the-art forensic detection engine. Identify
+                    deepfakes, manipulated images, and synthetic voices in real-time.
+                </p>
+
+                <div class="method-cards">
+                    <div class="method-card">
+                        <div class="icon-wrapper"><i class="fas fa-user-secret"></i></div>
+                        <h4>Facial Manipulation</h4>
+                        <p>Advanced Computer Vision detects manipulated facial expressions, blending artifacts, and
+                            unnatural blinking patterns.</p>
+                    </div>
+                    <div class="method-card">
+                        <div class="icon-wrapper"><i class="fas fa-video-slash"></i></div>
+                        <h4>Lip-Sync Mismatch</h4>
+                        <p>Temporal analysis identifies micro-sync discrepancies between audio waveforms and visual lip
+                            movements.</p>
+                    </div>
+                    <div class="method-card">
+                        <div class="icon-wrapper"><i class="fas fa-microphone-lines"></i></div>
+                        <h4>Synthetic Voice</h4>
+                        <p>Spectral feature analysis isolates AI-generated (TTS) voice patterns, measuring pitch
+                            stability and acoustic artifacts.</p>
+                    </div>
+                    <div class="method-card">
+                        <div class="icon-wrapper"><i class="fas fa-file-invoice"></i></div>
+                        <h4>Digital Forensics</h4>
+                        <p>Deep file analysis via metadata extraction and image artifact analysis (ELA/FFT) to spot
+                            invisible digital alterations.</p>
+                    </div>
+                    <div class="method-card">
+                        <div class="icon-wrapper"><i class="fas fa-brain"></i></div>
+                        <h4>AI Artifact Detection</h4>
+                        <p>Identifies structural abnormalities and algorithmic traces left behind by popular generative
+                            models.</p>
+                    </div>
+                    <div class="method-card">
+                        <div class="icon-wrapper"><i class="fas fa-shield-alt"></i></div>
+                        <h4>Real-Time Protection</h4>
+                        <p>Seamlessly integrates with live video streams and communication platforms to provide instant
+                            alert warnings.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Use Cases Section -->
+        <section class="showcase-section">
+            <h2 class="section-title">Multimodal Forensic Analytics</h2>
+
+            <div class="comparison-grid">
+                <!-- Image Forensics -->
+                <div class="media-category">
+                    <div class="media-card">
+                        <div class="media-viewport image-viewport">
+                            <i class="fas fa-image fa-3x bg-icon"></i>
+                            <span class="media-label label-fake"><i class="fas fa-biohazard"></i> Deepfake</span>
+                            <div class="overlay-scan"></div>
+                        </div>
+                        <div class="media-info">
+                            <h3>Image Forensics</h3>
+                            <h4>Synthetic Generation</h4>
+                            <p>Detects over-smooth textures, GAN-induced frequency artifacts, and anomalous metadata
+                                signatures.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Forensics -->
+                <div class="media-category">
+                    <div class="media-card">
+                        <div class="media-viewport video-viewport">
+                            <i class="fas fa-film fa-3x bg-icon"></i>
+                            <span class="media-label label-fake"><i class="fas fa-biohazard"></i> Face Swap</span>
+                            <div class="overlay-scan"></div>
+                        </div>
+                        <div class="media-info">
+                            <h3>Video Forensics</h3>
+                            <h4>Temporal Anomalies</h4>
+                            <p>Pinpoints frame-by-frame inconsistencies, face-swapping boundaries, and AI interpolation
+                                errors.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audio Analysis -->
+                <div class="media-category">
+                    <div class="media-card">
+                        <div class="media-viewport audio-viewport">
+                            <i class="fas fa-wave-square fa-3x bg-icon"></i>
+                            <span class="media-label label-fake"><i class="fas fa-biohazard"></i> Voice Clone</span>
+                            <div class="overlay-scan"></div>
+                        </div>
+                        <div class="media-info">
+                            <h3>Audio Forensics</h3>
+                            <h4>Audio Cloning (TTS)</h4>
+                            <p>Identifies machine-like spectral flatness, unnatural pitch stability, and lack of organic
+                                breathing.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Upload Section -->
+        <section class="upload-wrapper" id="detect">
+            <div class="upload-header">
+                <h2>Initiate Analysis Sequence</h2>
+                <p>Upload suspect media for deep forensic scanning.</p>
+            </div>
+
+            <div class="analysis-tabs">
+                <button class="tab-btn active" onclick="switchTab(event, 'image')"><i class="fas fa-image"></i> Image
+                    Forensics</button>
+                <button class="tab-btn" onclick="switchTab(event, 'video')"><i class="fas fa-video"></i> Video
+                    Analysis</button>
+                <button class="tab-btn" onclick="switchTab(event, 'audio')"><i class="fas fa-microphone-alt"></i> Voice
+                    Detection</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Image Tab -->
+                <div class="tab-panel active" id="tab-image">
+                    <div class="upload-area drop-area">
+                        <div class="upload-circles">
+                            <div class="circle c1"></div>
+                            <div class="circle c2"></div>
+                            <div class="circle c3"></div>
+                            <i class="fas fa-image upload-icon"></i>
+                        </div>
+                        <h3>Drag & Drop Image Evidence</h3>
+                        <p class="file-types">Supported formats: JPG, PNG, WEBP</p>
+                        <label class="btn-primary pulse-btn">Select Image<input type="file" class="file-input"
+                                accept="image/*" style="display:none;"></label>
+                    </div>
+                </div>
+
+                <!-- Video Tab -->
+                <div class="tab-panel" id="tab-video">
+                    <div class="upload-area drop-area">
+                        <div class="upload-circles">
+                            <div class="circle c1"></div>
+                            <div class="circle c2"></div>
+                            <div class="circle c3"></div>
+                            <i class="fas fa-video upload-icon"></i>
+                        </div>
+                        <h3>Drag & Drop Video Evidence</h3>
+                        <p class="file-types">Supported formats: MP4, AVI, MOV</p>
+                        <label class="btn-primary pulse-btn">Select Video<input type="file" class="file-input"
+                                accept="video/*" style="display:none;"></label>
+                    </div>
+
+                    <div class="or-divider"><span>OR</span></div>
+
+                    <div class="realtime-box" style="padding-bottom:15px;">
+                        <h4><i class="fas fa-link"></i> Remote Link Analysis</h4>
+                        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 15px;">Analyze a publicly
+                            accessible video URL directly from the web.</p>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <input type="url" id="video-url-input" placeholder="e.g. https://example.com/video.mp4"
+                                style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.2); color: white; font-family: 'Outfit', sans-serif; outline: none; transition: border-color 0.3s;"
+                                onfocus="this.style.borderColor='var(--accent-cyan)'"
+                                onblur="this.style.borderColor='var(--border-color)'">
+                            <button class="btn-secondary" id="analyze-url-btn" style="white-space: nowrap;"><i
+                                    class="fas fa-search"></i> Scan Link</button>
+                        </div>
+                    </div>
+
+                    <div class="or-divider"><span>OR</span></div>
+
+                    <div class="realtime-box">
+                        <h4><i class="fas fa-video"></i> Real-Time Webcam Analysis</h4>
+                        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 15px;">Analyze live
+                            webcam feed for visual deepfake artifacts.</p>
+                        <button class="btn-secondary pulse-blue" id="start-webcam-btn"><i class="fas fa-camera"></i>
+                            Start Live Webcam</button>
+                        <div id="webcam-container"
+                            style="width:100%; max-width: 400px; margin: 15px auto; position: relative;">
+                            <div id="webcam-placeholder"
+                                style="width: 100%; aspect-ratio: 4/3; border-radius: 8px; border: 1px dashed var(--border-color); background: rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.3s ease;">
+                                <i class="fas fa-video-slash"
+                                    style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.6; color: var(--accent-cyan);"></i>
+                                <span style="font-size: 0.95rem; font-family: 'Outfit', sans-serif;">Live Camera Feed
+                                    Will Appear Here</span>
+                            </div>
+                            <video id="webcam-preview" autoplay playsinline
+                                style="display:none; width:100%; border-radius: 8px; border: 1px solid var(--border-color);"></video>
+                        </div>
+                        <canvas id="webcam-canvas" style="display:none;"></canvas>
+                    </div>
+                </div>
+
+                <!-- Audio Tab -->
+                <div class="tab-panel" id="tab-audio">
+                    <div class="upload-area drop-area">
+                        <div class="upload-circles">
+                            <div class="circle c1"></div>
+                            <div class="circle c2"></div>
+                            <div class="circle c3"></div>
+                            <i class="fas fa-wave-square upload-icon"></i>
+                        </div>
+                        <h3>Drag & Drop Audio Evidence</h3>
+                        <p class="file-types">Supported formats: MP3, WAV, FLAC</p>
+                        <label class="btn-primary pulse-btn">Select Audio<input type="file" class="file-input"
+                                accept="audio/*" style="display:none;"></label>
+                    </div>
+
+                    <div class="or-divider"><span>OR</span></div>
+
+                    <div class="realtime-box">
+                        <h4><i class="fas fa-satellite-dish"></i> Real-Time Voice Detection</h4>
+                        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 15px;">Analyze live
+                            microphone input for synthetic voice cloning.</p>
+                        <button class="btn-secondary pulse-red"><i class="fas fa-microphone-lines"></i> Start Live
+                            Mic</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading">
+                <div class="cyber-spinner">
+                    <div class="spinner-outer"></div>
+                    <div class="spinner-inner"></div>
+                </div>
+                <p class="loading-text">Running Forensic Analysis...</p>
+                <div class="progress-bar-container scan-bar">
+                    <div class="progress-bar animated-bar"></div>
+                </div>
+            </div>
+
+            <div id="result-section">
+                <!-- Results injected via JS -->
+            </div>
+        </section>
+
+        <!-- About & Awareness Section -->
+        <section class="about-section">
+            <div class="about-grid">
+                <div class="about-text">
+                    <h2 class="section-title" style="text-align: left; margin-bottom: 1.5rem;">The Importance of <span
+                            class="text-gradient">Digital Trust</span></h2>
+                    <p>In an era where generative AI and synthetic media are indistinguishable from reality,
+                        <strong>TruthGuard AI</strong> serves as a critical line of defense. Our mission is to restore
+                        trust in digital ecosystems by providing accessible, state-of-the-art forensic analysis tools.
+                    </p>
+                    <p>Whether you're investigating a potential deepfake video, verifying the authenticity of an image,
+                        or analyzing synthetic voice clones, TruthGuard AI empowers journalists, security professionals,
+                        and everyday users to uncover the truth.</p>
+                    <div class="stats-container">
+                        <div class="stat-box">
+                            <span class="stat-number">99.8%</span>
+                            <span class="stat-label">Detection Accuracy</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-number">Real-Time</span>
+                            <span class="stat-label">Processing Speed</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-number">Multimodal</span>
+                            <span class="stat-label">Data Types</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-visual">
+                    <div class="abstract-shield">
+                        <i class="fas fa-shield-alt shield-icon"></i>
+                        <div class="shield-ring r1"></div>
+                        <div class="shield-ring r2"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <img src="/static/images/logo_concept1.svg" alt="TruthGuard AI Logo" class="footer-logo">
+            <p class="copyright-text">&copy; 2026 TruthGuard AI. Engineered with precision by <span
+                    class="highlight-author">Lokanath Meher</span>.</p>
+            <div class="social-links">
+                <a href="https://github.com/lokanathmeher19" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-github"></i></a>
+                <a href="https://www.linkedin.com/in/lokanath-meher-a79506353/" target="_blank"
+                    rel="noopener noreferrer"><i class="fab fa-linkedin"></i></a>
+                <a href="#"><i class="fas fa-shield-alt"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/script.js?v=1.5"></script>
+</body>
+
+</html>

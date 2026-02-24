@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120">
+    <defs>
+        <!-- Gradients -->
+        <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00E0FF" />
+            <stop offset="100%" stop-color="#7A5CFF" />
+        </linearGradient>
+        
+        <!-- Glow Filters -->
+        <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+        <filter id="strongGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+
+    <!-- Shield Base -->
+    <path d="M 50 15 L 80 25 L 80 60 C 80 85 65 105 50 110 C 35 105 20 85 20 60 L 20 25 Z" fill="none" stroke="url(#shieldGrad)" stroke-width="3" filter="url(#neonGlow)" />
+    
+    <!-- Inner Shield Line -->
+    <path d="M 50 25 L 70 32 L 70 60 C 70 78 58 93 50 98 C 42 93 30 78 30 60 L 30 32 Z" fill="none" stroke="#00E0FF" stroke-width="1" opacity="0.6"/>
+
+    <!-- Neural Network Nodes (Circles) -->
+    <circle cx="50" cy="25" r="3" fill="#00E0FF" filter="url(#neonGlow)"/>
+    <circle cx="30" cy="45" r="2.5" fill="#7A5CFF" filter="url(#neonGlow)"/>
+    <circle cx="70" cy="45" r="2.5" fill="#7A5CFF" filter="url(#neonGlow)"/>
+    <circle cx="50" cy="65" r="4" fill="#00E0FF" filter="url(#strongGlow)"/>
+    <circle cx="35" cy="75" r="2" fill="#00E0FF"/>
+    <circle cx="65" cy="75" r="2" fill="#00E0FF"/>
+    <circle cx="50" cy="98" r="3" fill="#7A5CFF" filter="url(#neonGlow)"/>
+
+    <!-- Neural Network Connecting Lines -->
+    <line x1="50" y1="25" x2="30" y2="45" stroke="#00E0FF" stroke-width="1.5" opacity="0.8"/>
+    <line x1="50" y1="25" x2="70" y2="45" stroke="#00E0FF" stroke-width="1.5" opacity="0.8"/>
+    <line x1="30" y1="45" x2="50" y2="65" stroke="#7A5CFF" stroke-width="1.5" opacity="0.8"/>
+    <line x1="70" y1="45" x2="50" y2="65" stroke="#7A5CFF" stroke-width="1.5" opacity="0.8"/>
+    <line x1="50" y1="65" x2="35" y2="75" stroke="#00E0FF" stroke-width="1.5" opacity="0.5"/>
+    <line x1="50" y1="65" x2="65" y2="75" stroke="#00E0FF" stroke-width="1.5" opacity="0.5"/>
+    <line x1="35" y1="75" x2="50" y2="98" stroke="#7A5CFF" stroke-width="1.5" opacity="0.8"/>
+    <line x1="65" y1="75" x2="50" y2="98" stroke="#7A5CFF" stroke-width="1.5" opacity="0.8"/>
+    <line x1="50" y1="25" x2="50" y2="65" stroke="#00E0FF" stroke-width="1" opacity="0.4" stroke-dasharray="2 2"/>
+</svg>
