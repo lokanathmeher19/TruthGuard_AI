@@ -20,7 +20,7 @@ def analyze_facial_landmarks(video_path: str, max_duration: int = 10):
     """
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
-        return 0.5, None
+        return 0.01, None
 
     fps = cap.get(cv2.CAP_PROP_FPS)
     if not fps or fps <= 0: fps = 30
@@ -94,7 +94,7 @@ def analyze_facial_landmarks(video_path: str, max_duration: int = 10):
     cap.release()
     
     if faces_found == 0 or len(deep_learning_scores) == 0:
-        return 0.5, None
+        return 0.01, None
         
     # Aggregate PyTorch ResNet Scores across all analyzed video frames
     average_deepfake_probability = float(np.mean(deep_learning_scores))

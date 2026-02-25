@@ -5,3 +5,10 @@ python-multipart>=0.0.9
 reportlab>=4.2.0
 requests>=2.32.0
 numpy>=1.26.4
+torch
+torchvision
+opencv-python
+librosa
+exifread
+Pillow
+matplotlib

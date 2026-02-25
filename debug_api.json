@@ -1,0 +1,54 @@
+{
+  "scan_id": "TG-3949517E",
+  "processing_time": "6.19 seconds",
+  "facial_score": 0.01,
+  "lipsync_score": 0.0,
+  "audio_score": 0.0,
+  "metadata_score": 0.01,
+  "final_score": 0.01,
+  "fake_probability": 0.01,
+  "verdict": "REAL",
+  "confidence_percentage": "1%",
+  "checks": {
+    "metadata": {
+      "pass": true,
+      "detail": "No Device Signature (Privacy Stripped or Generator); Deep Metadata Stripped (Common in social media)",
+      "report": {
+        "format": "JPEG",
+        "file_size": "1.03 MB",
+        "resolution": "2252 x 4000 px",
+        "duration": "N/A",
+        "software": "Web Download / Untracked (Heuristic Prediction)",
+        "device": "Unknown Device",
+        "creation_date": "2026-02-25 17:43:44",
+        "gps": "No Location Data",
+        "risk_flags": [
+          "No Device Signature (Privacy Stripped or Generator)",
+          "Deep Metadata Stripped (Common in social media)"
+        ],
+        "integrity_check": "Pass"
+      }
+    },
+    "visual": {
+      "pass": true,
+      "detail": "No manipulated facial expressions or GAN artifacts detected.",
+      "report": {
+        "neural_network_analysis": {
+          "pass": true,
+          "detail": "Consistent compression signature verified (Ratio: 1.14)."
+        },
+        "deep_feature_extraction": {
+          "pass": true,
+          "detail": "Localized Error Level Analysis confirms natural compression boundaries."
+        }
+      }
+    }
+  },
+  "explanation": "Image appears authentic based on noise patterns and metadata.",
+  "components": {
+    "face": 99.0,
+    "background": 100.0,
+    "voice": "N/A",
+    "body": 100.0
+  }
+}

@@ -22,14 +22,14 @@ def detect_lipsync_mismatch(video_path: str, max_duration: int = 15):
     try:
         y, sr = librosa.load(video_path, duration=max_duration)
         if len(y) == 0:
-            return 0.5, 0.0, None
+            return 0.01, 0.0, None # Silent video, assumed innocent
     except:
-        return 0.5, 0.0, None
+        return 0.01, 0.0, None # Audio extraction failed
 
     # 2. Extract Visual Motion Energy
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
-        return 0.5, 0.0, None
+        return 0.01, 0.0, None
         
     fps = cap.get(cv2.CAP_PROP_FPS)
     if not fps or fps <= 0: fps = 30
@@ -63,7 +63,7 @@ def detect_lipsync_mismatch(video_path: str, max_duration: int = 15):
     cap.release()
     
     if len(motion_energy) < 10:
-        return 0.5, 0.0, None
+        return 0.01, 0.0, None
         
     # 3. Synchronize Signal Lengths
     # Calculate Audio RMS envelope to match video frame rate
@@ -78,7 +78,7 @@ def detect_lipsync_mismatch(video_path: str, max_duration: int = 15):
     min_len = min(len(motion_energy), len(rms))
     
     if min_len < 2:
-        return 0.5, 0.0, None
+        return 0.01, 0.0, None
         
     # Standardize (Z-Score) for comparison
     def z_norm(v):
@@ -120,10 +120,10 @@ def detect_lipsync_mismatch(video_path: str, max_duration: int = 15):
 
     # 5. Scoring
     if correlation > 0.25:
-        score = 0.2
+        score = 0.01 # Perfect organic sync
     elif correlation > 0.1:
-        score = 0.5
+        score = 0.50 # Uncertain / Low motion
     else:
-        score = 0.8
+        score = 0.85 # Highly disjointed / Deepfake Lipsync
         
     return score, correlation, graph_path

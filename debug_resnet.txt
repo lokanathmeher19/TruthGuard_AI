@@ -1,0 +1,3 @@
+mee.jpeg : Var=4.791 Max=13.319
+AMIT.jpg : Var=4.055 Max=10.946
+ChatGPT Image Feb 22, 2026, 12_37_43 AM.png : Var=4.507 Max=6.924

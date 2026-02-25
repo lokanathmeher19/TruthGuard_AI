@@ -23,8 +23,8 @@ function displayResult(data, file) {
     const meta = data.checks.metadata.report || {};
     const hasGPS = meta.gps && meta.gps.includes("Present");
 
-    // Helper for granular bars
-    function createGranularBar(label, value) {
+    // Helper for granular bars with detailed descriptions
+    function createGranularBar(label, value, description) {
         if (value === "N/A" || value === null) return '';
         const numVal = parseFloat(value);
         let barColor = '#FF3B30'; // Red
@@ -32,13 +32,14 @@ function displayResult(data, file) {
         if (numVal > 75) barColor = '#34C759'; // Green
 
         return `
-            <div style="margin-bottom: 1.2rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; align-items: center;">
-                    <span style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">${label}</span>
+            <div style="margin-bottom: 1.5rem; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px; border-left: 3px solid ${barColor}88;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem; align-items: center;">
+                    <span style="font-weight: 600; color: var(--text-main); font-size: 0.95rem;">${label}</span>
                     <span style="font-weight: 700; color: ${barColor}; letter-spacing: 1px;">${value}% REAL</span>
                 </div>
-                <div class="dynamic-bar-bg">
-                    <div style="width: ${numVal}%; background: ${barColor}; height: 100%; box-shadow: 0 0 10px ${barColor}55;"></div>
+                <div style="margin-bottom: 0.8rem; font-size: 0.8rem; color: var(--text-muted); line-height: 1.3;">${description}</div>
+                <div class="dynamic-bar-bg" style="height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div style="width: ${numVal}%; background: ${barColor}; height: 100%; box-shadow: 0 0 10px ${barColor}55; border-radius: 4px;"></div>
                 </div>
             </div>
         `;
@@ -101,10 +102,10 @@ function displayResult(data, file) {
                         <i class="fas fa-chart-pie" style="color: var(--accent-blue);"></i> Component Authenticity
                     </h4>
                     <div class="dynamic-panel">
-                        ${createGranularBar('Face / Identity', data.components.face)}
-                        ${createGranularBar('Body / Movement', data.components.body)}
-                        ${createGranularBar('Voice / Audio', data.components.voice)}
-                        ${createGranularBar('Background / Environment', data.components.background)}
+                        ${createGranularBar('Face / Identity', data.components.face, 'Analyzes facial biometrics, blending boundaries, skin texture micro-patterns, and deep learning artifacts typical of GANs and face-swapping.')}
+                        ${createGranularBar('Body / Movement', data.components.body, 'Evaluates skeletal motion, posture continuity, and unnatural joint kinematics over time to detect AI-generated video framing anomalies.')}
+                        ${createGranularBar('Voice / Audio', data.components.voice, 'Scans for Text-to-Speech (TTS) acoustic signatures, unnatural frequency flatness, and voice cloning algorithms.')}
+                        ${createGranularBar('Background / Environment', data.components.background, 'Detects pixel spatial frequency anomalies, warped environments, and copy-move forgery within the contextual background.')}
                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 15px; font-style: italic; opacity: 0.8;">
                             * Scores represent the estimated probability of each component being authentic (unmanipulated).
                         </p>
@@ -117,22 +118,34 @@ function displayResult(data, file) {
                         <i class="fas fa-fingerprint" style="color: var(--accent-cyan);"></i> Device & Metadata
                     </h4>
                     <div class="dynamic-panel" style="font-family: 'Space Grotesk', monospace; font-size: 0.95rem;">
-                        <div style="margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                        <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                            <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">FILE SPECS & SIZE</small>
+                            <div style="color: var(--accent-cyan); font-weight: bold;">${meta.format || "Unknown Format"} • ${meta.file_size || "N/A"}</div>
+                        </div>
+
+                        ${meta.resolution && meta.resolution !== 'Unknown' ? `
+                        <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                            <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">MEDIA RESOLUTION</small>
+                            <div style="color: #fff; font-weight: bold;">${meta.resolution}</div>
+                        </div>` : ''}
+
+                        ${meta.duration && meta.duration !== 'N/A' ? `
+                        <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                            <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">MEDIA DURATION</small>
+                            <div style="color: #fff; font-weight: bold;">${meta.duration}</div>
+                        </div>` : ''}
+
+                        <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
                             <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">SOFTWARE / PLATFORM</small>
                             <div style="color: ${meta.software && meta.software.includes('EDITING') ? '#FF3B30' : '#fff'}; font-weight: bold;">${meta.software || "Unknown Origin"}</div>
                         </div>
                         
-                        <div style="margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                        <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
                             <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">DEVICE SIGNATURE</small>
                             <div style="color: #fff; font-weight: bold;">${meta.device || "Unknown Device"}</div>
                         </div>
 
-                        <div style="margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
-                            <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">PROCESSING TIME</small>
-                            <div style="color: #fff; font-weight: bold;">${data.processing_time || "N/A"}</div>
-                        </div>
-                        
-                        <div style="margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                        <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
                             <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">CREATION TIMESTAMP</small>
                             <div style="color: #fff;">${meta.creation_date || "Metadata Stripped"}</div>
                         </div>
@@ -215,6 +228,10 @@ function displayResult(data, file) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // PERMANENT LOCALHOST CONNECTION
+    // This absolutely guarantees that the frontend will always connect to your background TruthGuard server.
+    const API_BASE = 'http://127.0.0.1:8000';
+    const WS_BASE = 'ws://127.0.0.1:8000';
     const dropAreas = document.querySelectorAll('.drop-area');
     const fileInputs = document.querySelectorAll('.file-input');
     const resultSection = document.getElementById('result-section');
@@ -294,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
             analyzeUrlBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
             analyzeUrlBtn.disabled = true;
 
-            fetch('/analyze/', {
+            fetch(`${API_BASE}/analyze/`, {
                 method: 'POST',
                 body: formData
             })
@@ -349,9 +366,11 @@ document.addEventListener('DOMContentLoaded', () => {
         resultSection.innerHTML = '';
         dropArea.style.opacity = '0.5';
 
-        fetch('/analyze/', {
+        fetch(`${API_BASE}/analyze/`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            mode: 'cors',
+            cache: 'no-cache'
         })
             .then(async response => {
                 dropArea.style.opacity = '1';
@@ -432,8 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
             liveMicBtn.style.backgroundColor = 'rgba(255, 59, 48, 0.2)';
 
             // 1. Establish WebSocket Connection
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${protocol}//${window.location.host}/ws/analyze_audio`);
+            ws = new WebSocket(`${WS_BASE}/ws/analyze_audio`);
 
             ws.onopen = () => {
                 console.log("WebSocket connected. Starting stream...");
@@ -594,8 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (placeholder) placeholder.style.display = 'none';
 
             // 2. Establish WebSocket Connection
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            videoWs = new WebSocket(`${protocol}//${window.location.host}/ws/analyze_video`);
+            videoWs = new WebSocket(`${WS_BASE}/ws/analyze_video`);
 
             videoWs.onopen = () => {
                 console.log("Video WebSocket connected. Starting frame streaming...");

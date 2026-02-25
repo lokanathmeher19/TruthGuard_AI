@@ -17,9 +17,10 @@ def combine(facial=None, lipsync=None, audio=None, metadata=None, visual=None):
     if audio is not None: max_risk = max(max_risk, audio)
     if metadata is not None: max_risk = max(max_risk, metadata * 0.9) 
 
-    # If any core detection (Visual/Facial/Lipsync) is extremely high (> 0.85), 
-    # we trust it immediately to avoid dilution.
-    if max_risk > 0.85:
+    # If any core detection (Visual/Facial/Lipsync) is sufficiently high (> 0.55), 
+    # we trust the AI and immediately veto to avoid dilution by 'normal' metadata.
+    # A single manipulated component makes the whole media fake!
+    if max_risk > 0.55:
         return max_risk
 
     # 2. Weighted Fusion
