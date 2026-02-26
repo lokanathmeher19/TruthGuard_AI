@@ -7,6 +7,13 @@ window.switchTab = function (event, tabId) {
         event.currentTarget.classList.add('active');
     }
     document.getElementById('tab-' + tabId).classList.add('active');
+
+    // Auto-fetch history when the tab is clicked
+    if (tabId === 'history') {
+        if (typeof window.fetchHistory === 'function') {
+            window.fetchHistory();
+        }
+    }
 };
 
 function displayResult(data, file) {
@@ -15,7 +22,7 @@ function displayResult(data, file) {
 
     // Determine status colors and icons
     const isFake = data.verdict === 'FAKE';
-    const color = isFake ? '#FF3B30' : '#34C759'; // Red for Fake, Green for Real
+    const color = isFake ? '#FF003C' : '#00FF41'; // Red for Fake, Green for Real
     const riskLevel = isFake ? 'CRITICAL - THREAT DETECTED' : 'LOW - AUTHENTIC';
     const icon = isFake ? '<i class="fas fa-biohazard"></i>' : '<i class="fas fa-shield-alt"></i>';
 
@@ -27,9 +34,9 @@ function displayResult(data, file) {
     function createGranularBar(label, value, description) {
         if (value === "N/A" || value === null) return '';
         const numVal = parseFloat(value);
-        let barColor = '#FF3B30'; // Red
+        let barColor = '#FF003C'; // Red
         if (numVal > 40) barColor = '#FFCC00'; // Yellow
-        if (numVal > 75) barColor = '#34C759'; // Green
+        if (numVal > 75) barColor = '#00FF41'; // Green
 
         return `
             <div style="margin-bottom: 1.5rem; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px; border-left: 3px solid ${barColor}88;">
@@ -56,8 +63,8 @@ function displayResult(data, file) {
         for (const [key, check] of Object.entries(report)) {
             if (key === 'error' || key === 'annotated_image' || key === 'waveform_graph') continue;
             // For boolean checks, true is good (Green), false is bad (Red) depending on logic.
-            const icon = check.pass ? '<i class="fas fa-check-circle" style="color: #34C759;"></i>' : '<i class="fas fa-times-circle" style="color: #FF3B30;"></i>';
-            const statusColor = check.pass ? '#34C759' : '#FF3B30';
+            const icon = check.pass ? '<i class="fas fa-check-circle" style="color: #00FF41;"></i>' : '<i class="fas fa-times-circle" style="color: #FF003C;"></i>';
+            const statusColor = check.pass ? '#00FF41' : '#FF003C';
 
             // Format key text (e.g. "noise_patterns" -> "Noise Patterns")
             const formattedKey = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -119,6 +126,11 @@ function displayResult(data, file) {
                     </h4>
                     <div class="dynamic-panel" style="font-family: 'Space Grotesk', monospace; font-size: 0.95rem;">
                         <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                            <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">CRYPTOGRAPHIC CHECKSUM (SHA-256)</small>
+                            <div style="color: #fff; font-family: 'Courier New', monospace; font-size: 0.85rem; word-wrap: break-word;">${data.file_hash_sha256 || "N/A"}</div>
+                        </div>
+
+                        <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
                             <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">FILE SPECS & SIZE</small>
                             <div style="color: var(--accent-cyan); font-weight: bold;">${meta.format || "Unknown Format"} • ${meta.file_size || "N/A"}</div>
                         </div>
@@ -137,7 +149,7 @@ function displayResult(data, file) {
 
                         <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
                             <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">SOFTWARE / PLATFORM</small>
-                            <div style="color: ${meta.software && meta.software.includes('EDITING') ? '#FF3B30' : '#fff'}; font-weight: bold;">${meta.software || "Unknown Origin"}</div>
+                            <div style="color: ${meta.software && meta.software.includes('EDITING') ? '#FF003C' : '#fff'}; font-weight: bold;">${meta.software || "Unknown Origin"}</div>
                         </div>
                         
                         <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
@@ -152,7 +164,7 @@ function displayResult(data, file) {
                         
                         <div>
                             <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">GEOLOCATION DATA</small>
-                            <div style="color: ${hasGPS ? '#FF3B30' : '#34C759'}; font-weight: bold;">
+                            <div style="color: ${hasGPS ? '#FF003C' : '#00FF41'}; font-weight: bold;">
                                 ${meta.gps || "No GPS Tags Found"}
                             </div>
                         </div>
@@ -167,14 +179,14 @@ function displayResult(data, file) {
                 <h4 style="margin-top: 10px; margin-bottom: 5px; color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Detailed Forensic Findings</h4>
 
                 <!-- 1. Metadata Risks -->
-                <div style="padding: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px; border-left: 4px solid ${data.checks.metadata.pass ? '#34C759' : '#FFCC00'};">
+                <div style="padding: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px; border-left: 4px solid ${data.checks.metadata.pass ? '#00FF41' : '#FFCC00'};">
                     <strong style="font-size: 1.1rem; color: var(--text-main); display:flex; align-items:center; gap:8px;"><i class="fas fa-search" style="color: var(--accent-blue);"></i> Metadata Analysis</strong>
                     <p style="margin: 10px 0 0; font-size: 1rem; color: var(--text-muted);">${data.checks.metadata.detail}</p>
                 </div>
 
                 <!-- 2. Visual / Audio Analysis -->
                 ${data.checks.visual ? `
-                <div style="padding: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px; border-left: 4px solid ${data.checks.visual.pass ? '#34C759' : '#FF3B30'};">
+                <div style="padding: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px; border-left: 4px solid ${data.checks.visual.pass ? '#00FF41' : '#FF003C'};">
                     <strong style="font-size: 1.1rem; color: var(--text-main); display:flex; align-items:center; gap:8px;"><i class="fas fa-eye" style="color: var(--accent-cyan);"></i> Visual Integrity Check</strong>
                     <p style="margin: 10px 0 0; font-size: 1rem; color: var(--text-muted);">${data.checks.visual.detail}</p>
                     
@@ -196,7 +208,7 @@ function displayResult(data, file) {
                 </div>` : ''}
 
                 ${data.checks.audio ? `
-                <div style="padding: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px; border-left: 4px solid ${data.checks.audio.pass ? '#34C759' : '#FF3B30'};">
+                <div style="padding: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px; border-left: 4px solid ${data.checks.audio.pass ? '#00FF41' : '#FF003C'};">
                     <strong style="font-size: 1.1rem; color: var(--text-main); display:flex; align-items:center; gap:8px;"><i class="fas fa-microphone-alt" style="color: var(--accent-yellow);"></i> Voice & Audio Analysis</strong>
                     <p style="margin: 10px 0 0; font-size: 1rem; color: var(--text-muted);">${data.checks.audio.detail}</p>
                     
@@ -208,6 +220,13 @@ function displayResult(data, file) {
                     ` : ''}
 
                     ${renderDetailedChecks('Audio', data.checks.audio.report)}
+                </div>` : ''}
+
+                ${data.checks.steganography ? `
+                <div style="padding: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px; border-left: 4px solid ${data.checks.steganography.pass ? '#00FF41' : '#FF003C'};">
+                    <strong style="font-size: 1.1rem; color: var(--text-main); display:flex; align-items:center; gap:8px;"><i class="fas fa-user-secret" style="color: #9c27b0;"></i> Steganography Analysis</strong>
+                    <p style="margin: 10px 0 0; font-size: 1rem; color: var(--text-muted);">${data.checks.steganography.detail}</p>
+                    ${renderDetailedChecks('LSB Analytics', data.checks.steganography.report)}
                 </div>` : ''}
 
             </div>
@@ -233,6 +252,38 @@ function displayResult(data, file) {
 
     resultSection.innerHTML = resultHTML;
     resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function simulateTerminal() {
+    const terminalBody = document.getElementById('terminal-output');
+    if (!terminalBody) return;
+
+    terminalBody.innerHTML = '';
+    const commands = [
+        "Initializing PyTorch Deep Learning Tensors...",
+        "Loading EfficientNet_B0 Neural Weights into VRAM... [OK]",
+        "Calculated cryptographic hash (SHA-256)... [OK]",
+        "Running ExifTool metadata extraction...",
+        "Scanning LSB arrays for steganographic anomalies...",
+        "Searching for editing software signatures...",
+        "Processing visual artifacts (ELA/Noise)...",
+        "Extracting acoustic envelope...",
+        "Correlating audio-visual sync features...",
+        "Compiling decision fusion matrix...",
+        "Generating final forensic report..."
+    ];
+
+    let delay = 0;
+    commands.forEach((cmd) => {
+        setTimeout(() => {
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.innerHTML = `<span class="cmd-prompt">root@truthguard:~#</span> ${cmd}`;
+            terminalBody.appendChild(line);
+            terminalBody.scrollTop = terminalBody.scrollHeight;
+        }, delay);
+        delay += Math.floor(Math.random() * 600) + 300;
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -312,6 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('url', url);
 
             loading.style.display = 'block';
+            simulateTerminal();
             resultSection.style.display = 'none';
             resultSection.innerHTML = '';
 
@@ -353,12 +405,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     loading.style.display = 'none';
                     analyzeUrlBtn.innerHTML = btnOriginalHtml;
                     analyzeUrlBtn.disabled = false;
-                    resultSection.innerHTML = `
-                <div class="dynamic-result-card" style="border-left: 5px solid #FF3B30; padding: 25px;">
-                    <h3 style="color: #FF3B30; margin-top: 0; display:flex; align-items:center; gap:10px;"><i class="fas fa-exclamation-triangle"></i> URL Analysis Failed</h3>
-                    <p style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 10px;">${error.message}</p>
-                    <p style="color: var(--text-muted);">Please verify the URL is publicly accessible and points to a valid media file.</p>
-                </div>`;
+
+                    if (error.message.includes("QUARANTINE_ALERT")) {
+                        const parts = error.message.split("|");
+                        const vtLink = parts[2] ? `<a href="${parts[2]}" target="_blank" style="color: #FF003C; text-decoration: underline; margin-top: 15px; display: inline-block;">View VirusTotal Report <i class="fas fa-external-link-alt"></i></a>` : '';
+                        resultSection.innerHTML = `
+                        <div class="dynamic-result-card" style="box-shadow: 0 0 40px rgba(255, 0, 60, 0.4); border: 2px solid #FF003C; padding: 40px; text-align: center;">
+                            <i class="fas fa-biohazard" style="font-size: 5rem; color: #FF003C; margin-bottom: 20px; text-shadow: 0 0 20px #FF003C;"></i>
+                            <h2 style="color: #FF003C; font-family: 'Space Grotesk', sans-serif; letter-spacing: 5px; text-transform: uppercase;">QUARANTINE ALERT</h2>
+                            <p style="font-size: 1.2rem; color: var(--text-main); margin-top: 15px;">${parts[1]}</p>
+                            ${vtLink}
+                        </div>`;
+                    } else {
+                        resultSection.innerHTML = `
+                        <div class="dynamic-result-card" style="border-left: 5px solid #FF003C; padding: 25px;">
+                            <h3 style="color: #FF003C; margin-top: 0; display:flex; align-items:center; gap:10px;"><i class="fas fa-exclamation-triangle"></i> URL Analysis Failed</h3>
+                            <p style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 10px;">${error.message}</p>
+                            <p style="color: var(--text-muted);">Please verify the URL is publicly accessible and points to a valid media file.</p>
+                        </div>`;
+                    }
                     resultSection.style.display = 'block';
                     resultSection.scrollIntoView({ behavior: 'smooth' });
                 });
@@ -370,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('file', file);
 
         loading.style.display = 'block';
+        simulateTerminal();
         resultSection.style.display = 'none';
         resultSection.innerHTML = '';
         dropArea.style.opacity = '0.5';
@@ -407,12 +473,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Error:', error);
                 loading.style.display = 'none';
                 dropArea.style.opacity = '1';
-                resultSection.innerHTML = `
-                <div class="dynamic-result-card" style="border-left: 5px solid #FF3B30; padding: 25px;">
-                    <h3 style="color: #FF3B30; margin-top: 0; display:flex; align-items:center; gap:10px;"><i class="fas fa-exclamation-triangle"></i> Analysis Failed</h3>
-                    <p style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 10px;">${error.message}</p>
-                    <p style="color: var(--text-muted);">Please try uploading a different file or check your server connection.</p>
-                </div>`;
+
+                if (error.message.includes("QUARANTINE_ALERT")) {
+                    const parts = error.message.split("|");
+                    const vtLink = parts[2] ? `<a href="${parts[2]}" target="_blank" style="color: #FF003C; text-decoration: underline; margin-top: 15px; display: inline-block;">View VirusTotal Report <i class="fas fa-external-link-alt"></i></a>` : '';
+                    resultSection.innerHTML = `
+                    <div class="dynamic-result-card" style="box-shadow: 0 0 40px rgba(255, 0, 60, 0.4); border: 2px solid #FF003C; padding: 40px; text-align: center;">
+                        <i class="fas fa-biohazard" style="font-size: 5rem; color: #FF003C; margin-bottom: 20px; text-shadow: 0 0 20px #FF003C;"></i>
+                        <h2 style="color: #FF003C; font-family: 'Space Grotesk', sans-serif; letter-spacing: 5px; text-transform: uppercase;">QUARANTINE ALERT</h2>
+                        <p style="font-size: 1.2rem; color: var(--text-main); margin-top: 15px;">${parts[1]}</p>
+                        ${vtLink}
+                    </div>`;
+                } else {
+                    resultSection.innerHTML = `
+                    <div class="dynamic-result-card" style="border-left: 5px solid #FF003C; padding: 25px;">
+                        <h3 style="color: #FF003C; margin-top: 0; display:flex; align-items:center; gap:10px;"><i class="fas fa-exclamation-triangle"></i> Analysis Failed</h3>
+                        <p style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 10px;">${error.message}</p>
+                        <p style="color: var(--text-muted);">Please try uploading a different file or check your server connection.</p>
+                    </div>`;
+                }
+
                 resultSection.style.display = 'block';
                 resultSection.scrollIntoView({ behavior: 'smooth' });
             });
@@ -455,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isStreaming = true;
         try {
             liveMicBtn.innerHTML = '<i class="fas fa-stop-circle"></i> Stop Live Mic';
-            liveMicBtn.style.borderColor = '#FF3B30';
+            liveMicBtn.style.borderColor = '#FF003C';
             liveMicBtn.style.backgroundColor = 'rgba(255, 59, 48, 0.2)';
 
             // 1. Establish WebSocket Connection
@@ -481,14 +561,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Update visual UI based on live score
                     if (data.verdict === 'FAKE') {
                         liveStatusEl.style.backgroundColor = 'rgba(255, 59, 48, 0.2)';
-                        liveStatusEl.style.border = '1px solid #FF3B30';
-                        verdictEl.style.color = '#FF3B30';
-                        probEl.style.color = '#FF3B30';
+                        liveStatusEl.style.border = '1px solid #FF003C';
+                        verdictEl.style.color = '#FF003C';
+                        probEl.style.color = '#FF003C';
                     } else {
                         liveStatusEl.style.backgroundColor = 'rgba(52, 199, 89, 0.2)';
-                        liveStatusEl.style.border = '1px solid #34C759';
-                        verdictEl.style.color = '#34C759';
-                        probEl.style.color = '#34C759';
+                        liveStatusEl.style.border = '1px solid #00FF41';
+                        verdictEl.style.color = '#00FF41';
+                        probEl.style.color = '#00FF41';
                     }
                 }
             };
@@ -606,8 +686,8 @@ document.addEventListener('DOMContentLoaded', () => {
         isVideoStreaming = true;
         try {
             startWebcamBtn.innerHTML = '<i class="fas fa-stop-circle"></i> Stop Live Webcam';
-            startWebcamBtn.style.borderColor = '#FF3B30';
-            startWebcamBtn.style.color = '#FF3B30';
+            startWebcamBtn.style.borderColor = '#FF003C';
+            startWebcamBtn.style.color = '#FF003C';
             startWebcamBtn.style.backgroundColor = 'rgba(255, 59, 48, 0.2)';
             startWebcamBtn.classList.remove('pulse-blue');
             startWebcamBtn.classList.add('pulse-red');
@@ -645,14 +725,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Update visual UI based on live score
                     if (data.verdict === 'FAKE') {
                         videoStatusEl.style.backgroundColor = 'rgba(255, 59, 48, 0.2)';
-                        videoStatusEl.style.border = '1px solid #FF3B30';
-                        verdictEl.style.color = '#FF3B30';
-                        probEl.style.color = '#FF3B30';
+                        videoStatusEl.style.border = '1px solid #FF003C';
+                        verdictEl.style.color = '#FF003C';
+                        probEl.style.color = '#FF003C';
                     } else {
                         videoStatusEl.style.backgroundColor = 'rgba(52, 199, 89, 0.2)';
-                        videoStatusEl.style.border = '1px solid #34C759';
-                        verdictEl.style.color = '#34C759';
-                        probEl.style.color = '#34C759';
+                        videoStatusEl.style.border = '1px solid #00FF41';
+                        verdictEl.style.color = '#00FF41';
+                        probEl.style.color = '#00FF41';
                     }
                 }
             };
@@ -731,3 +811,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+// ----------------------------------------------------------------------
+// THREAT HISTORY DATABASE (History Tab)
+// ----------------------------------------------------------------------
+window.fetchHistory = function () {
+    const tableBody = document.getElementById('history-table-body');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Fetching records...</td></tr>`;
+
+    fetch('http://127.0.0.1:8000/history/')
+        .then(response => {
+            if (!response.ok) throw new Error("Failed to fetch history");
+            return response.json();
+        })
+        .then(json => {
+            const data = json.data;
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;">No historical scan data found.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach(scan => {
+                const dateObj = new Date(scan.timestamp);
+                const isFake = scan.verdict === 'FAKE';
+                const statusColor = isFake ? '#FF003C' : '#00FF41';
+                const badge = isFake ? `<span style="background: rgba(255,0,60,0.2); color: #FF003C; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem;">FAKE (${scan.fake_probability}%)</span>` : `<span style="background: rgba(0,255,65,0.2); color: #00FF41; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem;">REAL (${scan.fake_probability}%)</span>`;
+
+                html += `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 15px; font-family: monospace; color: var(--accent-blue);">${scan.scan_id.substring(0, 10)}...</td>
+                        <td style="padding: 15px; font-size: 0.9rem; color: var(--text-muted);">${dateObj.toLocaleString()}</td>
+                        <td style="padding: 15px; font-size: 0.9rem;">${scan.filename.substring(0, 25)}${scan.filename.length > 25 ? '...' : ''}</td>
+                        <td style="padding: 15px;">${isFake ? '<i class="fas fa-times-circle" style="color:#FF003C;"></i>' : '<i class="fas fa-check-circle" style="color:#00FF41;"></i>'}</td>
+                        <td style="padding: 15px;">${badge}</td>
+                        <td style="padding: 15px;">
+                            <a href="http://127.0.0.1:8000/report/${scan.scan_id}" target="_blank" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.9rem; background: rgba(0, 229, 255, 0.1); padding: 5px 10px; border-radius: 4px; border: 1px solid rgba(0, 229, 255, 0.3); transition: all 0.3s; display: inline-block;">
+                                <i class="fas fa-file-pdf"></i> Report
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = html;
+        })
+        .catch(error => {
+            console.error(error);
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #FF003C;"><i class="fas fa-exclamation-triangle"></i> Error loading database logs.</td></tr>`;
+        });
+};

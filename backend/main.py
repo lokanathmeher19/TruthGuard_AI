@@ -1,6 +1,3 @@
-from fastapi import FastAPI, UploadFile, File, Request, WebSocket, WebSocketDisconnect, Form
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
 import shutil
 import time
 import os
@@ -10,8 +7,11 @@ import asyncio
 import json
 import base64
 import requests
+import hashlib
+from collections import defaultdict
 from urllib.parse import urlparse
-from fastapi import FastAPI, UploadFile, File, Request, WebSocket, WebSocketDisconnect, Form, Depends
+
+from fastapi import FastAPI, UploadFile, File, Request, WebSocket, WebSocketDisconnect, Form, Depends, BackgroundTasks, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session 
@@ -19,14 +19,8 @@ from sqlalchemy.orm import Session
 # Database and Reports
 from backend.database import SessionLocal, ScanResult, get_db
 from backend.report import generate_pdf_report
-import time
-import os
-import traceback 
-import asyncio
-import json
-import base64
-import requests
-from urllib.parse import urlparse 
+from backend.steganography import analyze_steganography
+from backend.virustotal import scan_hash_virustotal
 
 # Import Analysis Modules
 from backend.image_model import detect_fake_image, AI_VISION_MODULE
@@ -52,6 +46,39 @@ app.add_middleware(
 # -------------------------------------------------------------------------
 # Global Configuration & Error Handling
 # -------------------------------------------------------------------------
+
+class RateLimiter:
+    def __init__(self, requests: int, window: int):
+        self.requests_limit = requests
+        self.window = window
+        self.clients = defaultdict(list)
+
+    def __call__(self, request: Request):
+        client_ip = request.client.host if request.client else "127.0.0.1"
+        now = time.time()
+        self.clients[client_ip] = [t for t in self.clients[client_ip] if now - t < self.window]
+        if len(self.clients[client_ip]) >= self.requests_limit:
+            raise HTTPException(status_code=429, detail="Rate Limit Exceeded: Maximum limit of requests per minute reached.")
+        self.clients[client_ip].append(now)
+
+analyze_limiter = RateLimiter(requests=10, window=60)
+
+def secure_wipe_file(file_path: str):
+    """
+    Implements a rigorous secure wipe by overwriting the file with random bytes 
+    before deleting it from the storage system (Zero-trust wipe).
+    """
+    try:
+        if os.path.exists(file_path):
+            file_size = os.path.getsize(file_path)
+            # Overwrite with random data
+            with open(file_path, "r+b") as f:
+                f.write(os.urandom(file_size))
+            # Delete the file
+            os.remove(file_path)
+            print(f"[SECURE WIPE] Evaluated artifact '{file_path}' successfully wiped and destroyed.")
+    except Exception as e:
+        print(f"[SECURE WIPE ERROR] Failed to wipe {file_path}: {e}")
 
 # Global Exception Handler to capture unhandled server errors and return JSON
 # instead of crashing, ensuring the frontend always receives a valid response.
@@ -79,8 +106,8 @@ async def read_root():
 # Main Analysis Endpoint
 # -------------------------------------------------------------------------
 
-@app.post("/analyze/")
-async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Session = Depends(get_db)):
+@app.post("/analyze/", dependencies=[Depends(analyze_limiter)])
+async def analyze(background_tasks: BackgroundTasks, file: UploadFile = File(None), url: str = Form(None), db: Session = Depends(get_db)):
     """
     Main entry point for deepfake analysis.
     1. Receives uploaded file or URL link.
@@ -105,9 +132,12 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
             try:
                 response = requests.get(url, stream=True, timeout=15)
                 response.raise_for_status()
+                file_hash = hashlib.sha256()
                 with open(file_path, "wb") as buffer:
                     for chunk in response.iter_content(chunk_size=8192):
                         buffer.write(chunk)
+                        file_hash.update(chunk)
+                file_hash_hex = file_hash.hexdigest()
             except Exception as e:
                 return JSONResponse(status_code=400, content={"error": f"Failed to download from URL: {str(e)}"})
         else:
@@ -115,12 +145,24 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
             file_path = os.path.join(UPLOAD_DIR, media_filename)
             # Save uploaded file safely, check for large files and avoid crashes
             file_size = 0
+            file_hash = hashlib.sha256()
             with open(file_path, "wb") as buffer:
                 while chunk := file.file.read(1024 * 1024): # Read in 1MB chunks
                     file_size += len(chunk)
                     if file_size > 50 * 1024 * 1024: # 50MB limit
                         return JSONResponse(status_code=400, content={"error": "File exceeds the 50MB size limit. Please upload a smaller file."})
                     buffer.write(chunk)
+                    file_hash.update(chunk)
+            file_hash_hex = file_hash.hexdigest()
+
+        # --- PRE-SCAN: ANTI-MALWARE INTELLIGENCE ---
+        # Ping VirusTotal API to ensure the file itself isn't a Trojan or Ransomware
+        vt_report = scan_hash_virustotal(file_hash_hex)
+        if vt_report.get("is_malware"):
+            # Threat identified! Abort forensic pipeline and destroy the artifact.
+            secure_wipe_file(file_path)
+            error_msg = f"QUARANTINE_ALERT|VirusTotal detected severe malware. File has been securely destroyed for your safety.|{vt_report.get('report_link', '')}"
+            return JSONResponse(status_code=403, content={"error": error_msg})
 
         # --- Step 1: Metadata Forensics ---
         # Checks for editing software signatures, missing EXIF tags, etc.
@@ -148,6 +190,9 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
             # Run visual artifact detection (Noise, ELA, Frequency)
             image_score, image_report = detect_fake_image(file_path)
             
+            # Run Steganography Forensic Check
+            steganography_report = analyze_steganography(file_path)
+            
             # Map for consistent variables in final JSON
             facial_score = image_score
             lipsync_score = 0.0
@@ -156,10 +201,21 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
             # Fusion: Image + Metadata
             final_score = combine(facial=image_score, metadata=metadata_score)
             
+            # Boost the threat score drastically if a secret payload is detected
+            if steganography_report.get("steganography_detected"):
+                final_score = max(final_score, 0.95)
+                explanation = "CRITICAL: Malicious Steganographic Payload detected hidden within image pixels. Severe Risk."
+            
             checks['visual'] = {
                 'pass': image_score < 0.5,
                 'detail': "No manipulated facial expressions or GAN artifacts detected.",
                 'report': image_report 
+            }
+            
+            checks['steganography'] = {
+                'pass': not steganography_report.get("steganography_detected", False),
+                'detail': steganography_report.get("analysis", "Normal pixel structure"),
+                'report': steganography_report
             }
 
         # B. VIDEO PIPELINE
@@ -252,6 +308,11 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
         print(f"Error during analysis: {e}")
         import traceback
         traceback.print_exc()
+        try:
+            if 'file_path' in locals():
+                secure_wipe_file(file_path)
+        except Exception:
+            pass
         return JSONResponse(status_code=500, content={"error": str(e)})
 
     # --- Step 3: Format Response ---
@@ -290,6 +351,7 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
     response_payload = {
         "scan_id": scan_id,
         "processing_time": f"{processing_time_sec} seconds",
+        "file_hash_sha256": file_hash_hex,
         "facial_score": round(float(facial_score), 3),
         "lipsync_score": round(float(lipsync_score), 3),
         "audio_score": round(float(audio_score), 3) if audio_score is not None else 0.0,
@@ -323,6 +385,9 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
     except Exception as db_err:
         print(f"Failed to save to database: {db_err}")
     
+    # Schedule secure wiping of the media file to ensure Zero-Trust storage
+    background_tasks.add_task(secure_wipe_file, file_path)
+    
     return response_payload
 
 # -------------------------------------------------------------------------
@@ -348,6 +413,30 @@ async def download_report(scan_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": f"Failed to generate PDF: {str(e)}"})
+
+# -------------------------------------------------------------------------
+# Threat History Endpoint
+# -------------------------------------------------------------------------
+@app.get("/history/")
+async def get_threat_history(db: Session = Depends(get_db)):
+    """
+    Fetches the latest 50 historical threat scans from the local SQLite database.
+    """
+    try:
+        scans = db.query(ScanResult).order_by(ScanResult.timestamp.desc()).limit(50).all()
+        history = []
+        for scan in scans:
+            history.append({
+                "scan_id": scan.scan_id,
+                "filename": scan.filename,
+                "timestamp": scan.timestamp.isoformat(),
+                "verdict": scan.verdict,
+                "fake_probability": round(scan.fake_probability * 100, 1)
+            })
+        return {"status": "success", "data": history}
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": f"Failed to fetch history: {str(e)}"})
 
 # -------------------------------------------------------------------------
 # Real-Time WebSocket Endpoint

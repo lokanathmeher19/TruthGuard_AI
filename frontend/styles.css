@@ -650,6 +650,83 @@ input[type="file"] {
     }
 }
 
+/* Terminal Console Styles */
+.terminal-container {
+    background: #0B111E;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 650px;
+    margin: 20px auto 0;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    text-align: left;
+}
+
+.terminal-header {
+    background: #1A2235;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.terminal-header .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.dot.red {
+    background: #FF3B30;
+}
+
+.dot.yellow {
+    background: #FFCC00;
+}
+
+.dot.green {
+    background: #34C759;
+}
+
+.terminal-title {
+    margin-left: auto;
+    margin-right: auto;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-family: 'Space Grotesk', monospace;
+    letter-spacing: 1px;
+}
+
+.terminal-body {
+    padding: 20px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    color: #00E5FF;
+    height: 180px;
+    overflow-y: auto;
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.4);
+}
+
+.terminal-line {
+    margin-bottom: 6px;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: terminalFadeIn 0.3s forwards;
+}
+
+.terminal-line .cmd-prompt {
+    color: #34C759;
+}
+
+@keyframes terminalFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Results Section will be dynamic but set some generic styles here */
 #result-section {
     text-align: left;

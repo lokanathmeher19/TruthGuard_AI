@@ -12,3 +12,4 @@ librosa
 exifread
 Pillow
 matplotlib
+mediapipe
