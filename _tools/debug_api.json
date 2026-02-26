@@ -9,7 +9,7 @@
   "fake_probability": 0.01,
   "verdict": "REAL",
   "confidence_percentage": "1%",
-  "checks": {
+  "checks": { 
     "metadata": {
       "pass": true,
       "detail": "No Device Signature (Privacy Stripped or Generator); Deep Metadata Stripped (Common in social media)",
@@ -51,4 +51,4 @@
     "voice": "N/A",
     "body": 100.0
   }
-}
+} 

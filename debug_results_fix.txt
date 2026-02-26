@@ -1,4 +1,0 @@
-AMIT.jpg => 0.01
-blazer photo.jpg => 0.01
-ChatGPT Image Feb 22, 2026, 12_37_43 AM.png => 0.99
-mee.jpeg => 0.01

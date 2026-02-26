@@ -1,3 +1,0 @@
-mee.jpeg : LapVar=249.13 NoiseVar=13.56 HfRatio=0.78
-AMIT.jpg : LapVar=49.48 NoiseVar=3.55 HfRatio=0.76
-ChatGPT Image Feb 22, 2026, 12_37_43 AM.png : LapVar=94.81 NoiseVar=5.59 HfRatio=0.76

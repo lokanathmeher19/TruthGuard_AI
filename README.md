@@ -35,7 +35,7 @@
 2. Alternatively, manually install and run:
    ```cmd
    pip install -r requirements.txt
-   uvicorn app.main:app --reload
+   uvicorn backend.main:app --reload
    ```
 
 3. Open your browser and navigate to `http://127.0.0.1:8000` to access the drag-and-drop web interface.

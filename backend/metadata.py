@@ -17,7 +17,7 @@ def check_metadata(file_path):
         
     file_format = os.path.splitext(file_path)[1].upper().replace(".", "")
     
-    analysis_report = {
+    metadata_analysis = {
         "format": file_format,
         "file_size": f"{file_size_mb} MB",
         "resolution": "Unknown",
@@ -40,17 +40,17 @@ def check_metadata(file_path):
                 fps = cap.get(cv2.CAP_PROP_FPS)
                 frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
                 if width > 0 and height > 0:
-                    analysis_report["resolution"] = f"{width} x {height} px"
+                    metadata_analysis["resolution"] = f"{width} x {height} px"
                 if fps > 0 and frame_count > 0:
-                    analysis_report["duration"] = f"{round(frame_count / fps, 2)} secs"
+                    metadata_analysis["duration"] = f"{round(frame_count / fps, 2)} secs"
             cap.release()
         elif file_path.lower().endswith(('.wav', '.mp3', '.ogg', '.flac')):
             import librosa
             duration_sec = librosa.get_duration(path=file_path)
-            analysis_report["duration"] = f"{round(duration_sec, 2)} secs"
+            metadata_analysis["duration"] = f"{round(duration_sec, 2)} secs"
         elif file_path.lower().endswith(('.jpg', '.png', '.jpeg')):
             with Image.open(file_path) as img:
-                analysis_report["resolution"] = f"{img.width} x {img.height} px"
+                metadata_analysis["resolution"] = f"{img.width} x {img.height} px"
     except Exception as e:
         print("Media characteristic extraction error:", e)
     
@@ -61,7 +61,7 @@ def check_metadata(file_path):
 
         # 1. Software / Platform Analysis
         software_tag = str(tags.get('Image Software', ''))
-        analysis_report['software'] = software_tag if software_tag else "Unknown / Stripped"
+        metadata_analysis['software'] = software_tag if software_tag else "Unknown / Stripped"
         
         suspicious_keywords = [
             "Adobe", "Photoshop", "GIMP", "Edit", "Synthetic", "AI", "Generative", 
@@ -71,8 +71,8 @@ def check_metadata(file_path):
         if software_tag:
             if any(keyword.lower() in software_tag.lower() for keyword in suspicious_keywords):
                 score += 0.4
-                analysis_report['software'] = f"{software_tag} (EDITING DETECTED)"
-                analysis_report['risk_flags'].append(f"Editing Software Detected: {software_tag}")
+                metadata_analysis['software'] = f"{software_tag} (EDITING DETECTED)"
+                metadata_analysis['risk_flags'].append(f"Editing Software Detected: {software_tag}")
         else:
             # Deep Binary Signature Scanning (If standard EXIF is stripped)
             # Many platforms strip EXIF but leave binary stamps in the atoms/headers.
@@ -142,13 +142,13 @@ def check_metadata(file_path):
                     found_sig = False
                     for sig, platform_name in signatures.items():
                         if sig in raw_bytes:
-                            analysis_report['software'] = f"{platform_name} (Deep Binary Scan)"
+                            metadata_analysis['software'] = f"{platform_name} (Deep Binary Scan)"
                             if "(AI" in platform_name or "FaceApp" in platform_name:
                                 score += 0.9  # Direct AI signature is an immediate Critical Flag
-                                analysis_report['risk_flags'].append(f"CRITICAL: {platform_name} Engine Signature Detected")
+                                metadata_analysis['risk_flags'].append(f"CRITICAL: {platform_name} Engine Signature Detected")
                             elif "Adobe" in platform_name:
                                 score += 0.05
-                                analysis_report['risk_flags'].append(f"Professional Editing Software Detected: {platform_name} (Not Inherently Malicious)")
+                                metadata_analysis['risk_flags'].append(f"Professional Editing Software Detected: {platform_name} (Not Inherently Malicious)")
                             found_sig = True
                             break
                             
@@ -159,8 +159,8 @@ def check_metadata(file_path):
                         # based on compression, aspect ratio, and format to guess the source!
                         # -----------------------------------------------------------------
                         guessed_platform = "Unknown Source"
-                        res = analysis_report.get('resolution', '')
-                        fmt = analysis_report.get('format', '').upper()
+                        res = metadata_analysis.get('resolution', '')
+                        fmt = metadata_analysis.get('format', '').upper()
                         size = file_size_mb
                         
                         if fmt in ['MP4', 'MOV']:
@@ -181,7 +181,7 @@ def check_metadata(file_path):
                             if size > 1.0 and ('512 x 512' in res or '1024 x 1024' in res):
                                 guessed_platform = "AI Generator (Midjourney/DALL-E)"
                                 score += 0.85
-                                analysis_report['risk_flags'].append("High Quality PNG with Diffusion Dimensions")
+                                metadata_analysis['risk_flags'].append("High Quality PNG with Diffusion Dimensions")
                             else:
                                 guessed_platform = "Screen Capture / Web Graphic"
                         elif fmt in ['WAV', 'MP3']:
@@ -190,42 +190,36 @@ def check_metadata(file_path):
                             else:
                                 guessed_platform = "Studio / Podcast Recording"
                         
-                        analysis_report['software'] = f"{guessed_platform} (Heuristic Prediction)"
+                        metadata_analysis['software'] = f"{guessed_platform} (Heuristic Prediction)"
             except Exception:
-                analysis_report['software'] = "Unknown Source (Corrupted/Stripped)"
+                metadata_analysis['software'] = "Unknown Source (Corrupted/Stripped)"
 
         # 2. Device Fingerprinting & Consistency
         make = str(tags.get('Image Make', ''))
         model = str(tags.get('Image Model', ''))
         
         if make or model:
-            analysis_report['device'] = f"{make} {model}".strip()
+            metadata_analysis['device'] = f"{make} {model}".strip()
             
             # Integrity Check: If camera make is present, we expect other camera details (Exposure, ISO)
-            # If sophisticated tags are missing but Make is present, it's often a re-save that preserved partial EXIF.
             has_exposure = 'EXIF ExposureTime' in tags or 'EXIF ISOSpeedRatings' in tags
             if not has_exposure:
-                # Common in edited or resized photos, no longer penalize to avoid false positives
-                analysis_report['risk_flags'].append("Incomplete Camera EXIF (Common in re-saves)")
-                analysis_report['integrity_check'] = "Valid (Incomplete EXIF)"
+                metadata_analysis['risk_flags'].append("Incomplete Camera EXIF (Common in re-saves)")
+                metadata_analysis['integrity_check'] = "Valid (Incomplete EXIF)"
         else:
-            # No device info. Usually just means it passed through WhatsApp/Facebook which strips it for privacy.
-            # We don't severely penalize this anymore since it's normal behavior.
             score += 0.0 
-            analysis_report['risk_flags'].append("No Device Signature (Privacy Stripped or Generator)")
+            metadata_analysis['risk_flags'].append("No Device Signature (Privacy Stripped or Generator)")
 
         # 3. Creation Date Security Check
         date_time = str(tags.get('EXIF DateTimeOriginal', ''))
         digitized_time = str(tags.get('EXIF DateTimeDigitized', ''))
         
         if date_time:
-            analysis_report['creation_date'] = date_time
-            if digitized_time and date_time != digitized_time:
-                 pass
+            metadata_analysis['creation_date'] = date_time
         
         # 4. Location / GPS Security
         if 'GPS GPSLatitude' in tags:
-            analysis_report['gps'] = "Location Data Present (Authenticity Indicator)"
+            metadata_analysis['gps'] = "Location Data Present (Authenticity Indicator)"
             score -= 0.15 # Strong signal of organic capture
         
         # 5. Pillow Analysis for Compression cues
@@ -233,29 +227,32 @@ def check_metadata(file_path):
             with Image.open(file_path) as img:
                 if img.format == 'JPEG':
                     if not img.quantization:
-                        analysis_report['risk_flags'].append("Missing Quantization (Non-standard JPEG)")
+                        metadata_analysis['risk_flags'].append("Suspicious Compression Pattern: Missing Quantization Tables (Non-standard JPEG)")
+                        score += 0.20
+                    elif len(img.quantization) < 2:
+                        metadata_analysis['risk_flags'].append("Suspicious Compression Pattern: Unified Luma/Chroma Tables (AI Artifact)")
+                        score += 0.15
                     
                     if 'adobe' in img.info:
-                        # Photographers use Photoshop/Lightroom. This is NOT a deepfake indicator.
                         score += 0.0
-                        analysis_report['risk_flags'].append("Adobe Editing Software (Photoshop/Lightroom) Detected")
+                        metadata_analysis['risk_flags'].append("Adobe Editing Software (Photoshop/Lightroom) Detected")
                         
                 if img.format == 'PNG':
                    text_chunks = img.text
                    if 'parameters' in text_chunks or 'Software' in text_chunks.get('Software', ''):
                        if 'Stable Diffusion' in str(text_chunks) or 'Midjourney' in str(text_chunks):
                            score += 0.8
-                           analysis_report['risk_flags'].append("AI Diffusion Metadata Found")
+                           metadata_analysis['risk_flags'].append("AI Diffusion Metadata Found")
         except Exception:
             pass 
 
-        # 6. Anomaly Detection (Neutralized for consumer apps)
+        # 6. Anomaly Detection
         if len(tags) < 3 and score < 0.2:
-            analysis_report['risk_flags'].append("Deep Metadata Stripped (Common in social media)")
-            score = max(0.01, score - 0.05) # Actively forgive stripped social media metadata
+            metadata_analysis['risk_flags'].append("Missing camera metadata (Common in social media)")
+            score = max(0.01, score - 0.05)
             
-        final_score = min(max(score, 0.01), 0.99)
-        return final_score, analysis_report
+        metadata_score = min(max(score, 0.01), 0.99)
+        return metadata_score, metadata_analysis
 
     except Exception as e:
         print(f"Metadata error: {e}")

@@ -49,4 +49,4 @@ except Exception as e:
 
 # Save
 image.save("static/images/logo.png")
-print("SynthDetect AI logo created at static/images/logo.png")
+print("SynthDetect AI logo created at static/images/logo.png") 

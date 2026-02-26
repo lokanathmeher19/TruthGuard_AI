@@ -54,7 +54,7 @@ function displayResult(data, file) {
             <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.95rem;">`;
 
         for (const [key, check] of Object.entries(report)) {
-            if (key === 'error' || key === 'annotated_image') continue;
+            if (key === 'error' || key === 'annotated_image' || key === 'waveform_graph') continue;
             // For boolean checks, true is good (Green), false is bad (Red) depending on logic.
             const icon = check.pass ? '<i class="fas fa-check-circle" style="color: #34C759;"></i>' : '<i class="fas fa-times-circle" style="color: #FF3B30;"></i>';
             const statusColor = check.pass ? '#34C759' : '#FF3B30';
@@ -199,6 +199,14 @@ function displayResult(data, file) {
                 <div style="padding: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px; border-left: 4px solid ${data.checks.audio.pass ? '#34C759' : '#FF3B30'};">
                     <strong style="font-size: 1.1rem; color: var(--text-main); display:flex; align-items:center; gap:8px;"><i class="fas fa-microphone-alt" style="color: var(--accent-yellow);"></i> Voice & Audio Analysis</strong>
                     <p style="margin: 10px 0 0; font-size: 1rem; color: var(--text-muted);">${data.checks.audio.detail}</p>
+                    
+                    ${data.checks.audio.report && data.checks.audio.report.waveform_graph ? `
+                        <div style="margin-top: 20px; margin-bottom: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; background: rgba(0,0,0,0.3);">
+                            <strong style="display: block; margin-bottom: 10px; color: var(--accent-yellow); font-size: 0.85rem; letter-spacing: 1px;">ACOUSTIC ENVELOPE ANALYSIS</strong>
+                            <img src="${data.checks.audio.report.waveform_graph}" style="max-width: 100%; border-radius: 6px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);" alt="Waveform Generator Plot">
+                        </div>
+                    ` : ''}
+
                     ${renderDetailedChecks('Audio', data.checks.audio.report)}
                 </div>` : ''}
 

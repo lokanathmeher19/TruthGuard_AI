@@ -14,42 +14,41 @@ from urllib.parse import urlparse
 from fastapi import FastAPI, UploadFile, File, Request, WebSocket, WebSocketDisconnect, Form, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session 
 
 # Database and Reports
-from app.database import SessionLocal, ScanResult, get_db
-from app.report import generate_pdf_report
+from backend.database import SessionLocal, ScanResult, get_db
+from backend.report import generate_pdf_report
 import time
 import os
-import traceback
+import traceback 
 import asyncio
 import json
 import base64
 import requests
-from urllib.parse import urlparse
+from urllib.parse import urlparse 
 
 # Import Analysis Modules
-from app.image_model import detect_fake_image
-from app.video_model import detect_fake_video
-from app.audio_model import detect_fake_audio
-from app.metadata import check_metadata
-from app.fusion import combine
+from backend.image_model import detect_fake_image, AI_VISION_MODULE
+from backend.video_model import detect_fake_video
+from backend.audio_model import detect_fake_audio, predict_live_audio
+from backend.metadata import check_metadata
+from backend.fusion import combine 
 
 app = FastAPI(
     title="TruthGuard Deepfake Detection API",
     description="Multi-modal deepfake detection system analyzing Video, Audio, Image, and Metadata.",
-    version="1.0.0"
-)
+    version="1.0.0" 
+) 
 
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+    allow_headers=["*"], 
+) 
 # -------------------------------------------------------------------------
 # Global Configuration & Error Handling
 # -------------------------------------------------------------------------
@@ -69,12 +68,12 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Mount static files for serving the frontend
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 
 @app.get("/")
 async def read_root():
     """Serves the main frontend application."""
-    return FileResponse("static/index.html")
+    return FileResponse("frontend/index.html")
 
 # -------------------------------------------------------------------------
 # Main Analysis Endpoint
@@ -114,9 +113,14 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
         else:
             media_filename = file.filename
             file_path = os.path.join(UPLOAD_DIR, media_filename)
-            # Save uploaded file safely
+            # Save uploaded file safely, check for large files and avoid crashes
+            file_size = 0
             with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
+                while chunk := file.file.read(1024 * 1024): # Read in 1MB chunks
+                    file_size += len(chunk)
+                    if file_size > 50 * 1024 * 1024: # 50MB limit
+                        return JSONResponse(status_code=400, content={"error": "File exceeds the 50MB size limit. Please upload a smaller file."})
+                    buffer.write(chunk)
 
         # --- Step 1: Metadata Forensics ---
         # Checks for editing software signatures, missing EXIF tags, etc.
@@ -157,10 +161,6 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
                 'detail': "No manipulated facial expressions or GAN artifacts detected.",
                 'report': image_report 
             }
-            if image_score > 0.5:
-                 checks['visual']['detail'] = "Detected visual anomalies consistent with AI generation."
-            
-            explanation = "Image appears authentic based on noise patterns and metadata." if final_score < 0.5 else "High probability of synthetic generation due to visual anomalies."
 
         # B. VIDEO PIPELINE
         elif media_filename.lower().endswith((".mp4", ".avi", ".mov")):
@@ -208,25 +208,10 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
                      'report': audio_report
                 }
 
-            # Generate Explanation based on signals
-            if final_score > 0.5:
-                sources = []
-                if facial_score > 0.5: sources.append("Unnatural Facial Biometrics")
-                if lipsync_score > 0.5: sources.append("Lip-Sync Mismatch")
-                if audio_score is not None and audio_score > 0.5: sources.append("Synthetic Voice")
-                if metadata_score > 0.5: sources.append("Metadata Anomalies")
-                explanation = f"Deepfake detected based on: {', '.join(sources)}."
-            else:
-                explanation = "Multi-modal analysis confirms content authenticity."
-
         # C. AUDIO PIPELINE
         elif media_filename.lower().endswith((".wav", ".mp3", ".ogg", ".flac")):
             # Run audio forensics
             audio_score, audio_report = detect_fake_audio(file_path)
-            
-            # Reset visual scores
-            facial_score = 0.0
-            lipsync_score = 0.0
             
             # Fusion: Audio + Metadata
             final_score = combine(audio=audio_score, metadata=metadata_score)
@@ -236,18 +221,43 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
                 'detail': "Natural voice patterns detected.",
                 'report': audio_report
             }
-            explanation = "Audio spectrum is consistent with natural recording." if final_score < 0.5 else "Cloned voice signature detected."
 
         else:
             return JSONResponse(status_code=400, content={"error": "Unsupported file type"})
 
+        # Generate Explanation based on signals dynamically based on the highest threat indicator
+        max_threat_score = 0.0
+        threat_source = "None"
+        
+        components_map = {
+            "Visual Rendering (Generative AI)": facial_score if media_filename.lower().endswith((".jpg", ".png", ".jpeg")) else visual_score,
+            "Facial Biometrics": facial_score,
+            "Acoustic Envelope (Voice Synthesis)": audio_score if audio_score is not None else 0.0,
+            "Lip-Sync Correlation": lipsync_score,
+            "Hardware & EXIF Metadata": metadata_score
+        }
+        
+        for name, comp_score in components_map.items():
+            if comp_score > max_threat_score:
+                max_threat_score = comp_score
+                threat_source = name
+                
+        if final_score > 0.5:
+            explanation = f"Critical manipulation detected. The primary anomaly originates from: '{threat_source}'. Confidence in synthetic generation is high."
+        else:
+            explanation = "Extensive multi-modal analysis passes. No concrete indicators of digital manipulation or generative AI synthesis found."
+
     except Exception as e:
         # Catch-all for unexpected pipeline failures
+        print(f"Error during analysis: {e}")
         import traceback
         traceback.print_exc()
-        return JSONResponse(status_code=500, content={"error": "Analysis failed", "details": str(e)})
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
     # --- Step 3: Format Response ---
+    # Calculate total processing time accurately
+    processing_time_sec = round(time.time() - start_time, 2)
+    
     # Calculate granular "Realness" percentages for frontend display
     
     # Defaults
@@ -271,9 +281,7 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
     elif media_filename.lower().endswith((".wav", ".mp3", ".ogg", ".flac")):
         voice_realness = max(0, 1.0 - audio_score)
 
-    # Final standardized JSON response
-    processing_time = round(time.time() - start_time, 2)
-    
+    # Final standardized JSON response    
     # -------------------------------------------------------------------------
     # Database Persistence & unique Scan ID
     # -------------------------------------------------------------------------
@@ -281,22 +289,23 @@ async def analyze(file: UploadFile = File(None), url: str = Form(None), db: Sess
     
     response_payload = {
         "scan_id": scan_id,
-        "processing_time": f"{processing_time} seconds",
-        "facial_score": round(facial_score, 3) if isinstance(facial_score, float) else 0.0,
-        "lipsync_score": round(lipsync_score, 3) if isinstance(lipsync_score, float) else 0.0,
-        "audio_score": round(audio_score, 3) if isinstance(audio_score, float) else 0.0,
-        "metadata_score": round(metadata_score, 3),
-        "final_score": round(final_score, 3),
-        "fake_probability": round(final_score, 3),
+        "processing_time": f"{processing_time_sec} seconds",
+        "facial_score": round(float(facial_score), 3),
+        "lipsync_score": round(float(lipsync_score), 3),
+        "audio_score": round(float(audio_score), 3) if audio_score is not None else 0.0,
+        "metadata_score": round(float(metadata_score), 3),
+        "final_score": round(float(final_score), 3),
+        "fake_probability": round(float(final_score), 3),
         "verdict": "FAKE" if final_score > 0.5 else "REAL",
         "confidence_percentage": f"{int(final_score * 100)}%",
-        "checks": checks,
         "explanation": explanation,
+        "highest_suspicious_module": threat_source,
+        "checks": checks,
         "components": {
-            "face": round(face_realness * 100, 1) if isinstance(face_realness, float) else face_realness,
-            "background": round(background_realness * 100, 1) if isinstance(background_realness, float) else background_realness,
-            "voice": round(voice_realness * 100, 1) if isinstance(voice_realness, float) else voice_realness,
-            "body": round(body_realness * 100, 1) if isinstance(body_realness, float) else body_realness
+            "face": round(float(face_realness) * 100, 1) if isinstance(face_realness, (int, float)) else face_realness,
+            "background": round(float(background_realness) * 100, 1) if isinstance(background_realness, (int, float)) else background_realness,
+            "voice": round(float(voice_realness) * 100, 1) if isinstance(voice_realness, (int, float)) else voice_realness,
+            "body": round(float(body_realness) * 100, 1) if isinstance(body_realness, (int, float)) else body_realness
         }
     }
     
@@ -356,21 +365,8 @@ async def websocket_audio_endpoint(websocket: WebSocket):
             # Receive data from the browser (e.g. video/audio Blob)
             data = await websocket.receive_bytes()
             
-            # In a full production environment, we would decode the byte stream 
-            # using ffmpeg-python or cv2.imdecode. 
-            # For this prototype, we simulate a fast AI analysis pipeline 
-            # based on the stream size variance (proxy for real-time analysis).
-            
-            # Simulated Deep Learning computation for live streams
-            # Real network would be: score = real_time_model.predict(decoded_frame)
-            await asyncio.sleep(0.1) # Simulate inference time
-            
-            # Generate a dynamic score based on the stream data length (dummy heuristic for UI)
-            # In reality, this routes to `AI_VISION_MODULE` or `audio_model`
-            length_factor = len(data) % 100
-            is_synthetic = length_factor > 80 
-            
-            fake_prob = 0.85 if is_synthetic else 0.15
+            # Offload heavy acoustic inference tensor mapping to background thread asynchronously
+            fake_prob = await asyncio.to_thread(predict_live_audio, data)
             
             verdict_payload = {
                 "status": "success",
@@ -411,15 +407,8 @@ async def websocket_video_endpoint(websocket: WebSocket):
                 header, encoded = data.split(",", 1)
                 img_bytes = base64.b64decode(encoded)
                 
-                # Simulate fast PyTorch CNN frame processing
-                # (Production: score = AI_VISION_MODULE.predict(img_bytes))
-                await asyncio.sleep(0.05) 
-                
-                # Dummy variance logic on the byte size for the UI prototype
-                length_factor = len(img_bytes) % 100
-                is_synthetic = length_factor > 85 
-                
-                fake_prob = 0.88 if is_synthetic else 0.12
+                # Execute LIVE internal neural network Vision Processing
+                fake_prob = await asyncio.to_thread(AI_VISION_MODULE.predict_live_frame, img_bytes)
                 
                 verdict_payload = {
                     "status": "success",
@@ -438,4 +427,5 @@ async def websocket_video_endpoint(websocket: WebSocket):
         try:
             await websocket.send_text(json.dumps({"status": "error", "message": str(e)}))
         except:
-            pass
+            pass 
+

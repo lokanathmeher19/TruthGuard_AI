@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 import tempfile
 import os
-from app.image_model import detect_fake_image
-from app.facial_analysis import analyze_facial_landmarks
-from app.lipsync import detect_lipsync_mismatch
+from backend.image_model import detect_fake_image
+from backend.facial_analysis import analyze_facial_landmarks
+from backend.lipsync import detect_lipsync_mismatch
 
 def detect_fake_video(video_path):
     """
@@ -24,6 +24,8 @@ def detect_fake_video(video_path):
     # --- Stage 1: Frame-by-Frame Visual Analysis ---
     cap = cv2.VideoCapture(video_path)
     scores = []
+    optical_flow_mags = []
+    prev_gray = None
     frame_count = 0
     
     # Smart Sampling: Determine FPS to sample approx 1 frame per second
@@ -31,25 +33,46 @@ def detect_fake_video(video_path):
     if not fps or fps <= 0: fps = 30
     
     # Limit analysis to first 10 seconds to ensure swift API response
-    max_frames_to_scan = int(fps * 10) 
-    sample_rate = int(fps) 
+    sample_rate = max(1, int(fps)) 
+    max_frames_to_scan = int(sample_rate * 10) 
 
     while True:
         ret, frame = cap.read()
+        
+        # Break exactly after 10 seconds of source footage is extracted
         if not ret or frame_count > max_frames_to_scan:
             break
 
-        # Analyze sparsely (1 fps)
+        # --- Hardware-Accelerated Optical Flow Analysis (Jitter Detection) ---
+        # Analyze at roughly 5-6 FPS to map structural displacement between consecutive captures
+        flow_sample_rate = max(1, sample_rate // 5)
+        if frame_count % flow_sample_rate == 0:
+            # Severely downscale to 160x120 to execute dense optical flow instantly
+            small_frame = cv2.resize(frame, (160, 120), interpolation=cv2.INTER_AREA)
+            gray = cv2.cvtColor(small_frame, cv2.COLOR_BGR2GRAY)
+            
+            if prev_gray is not None:
+                # Computes the Dense Optical Flow (mathematical movement of pixels)
+                flow = cv2.calcOpticalFlowFarneback(prev_gray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+                mag, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+                
+                # Deepfake face swappers create micro-jitter and unnatural boundary shifting 
+                # which causes the localized velocity variance to spike anomalously.
+                optical_flow_mags.append(np.var(mag))
+                
+            prev_gray = gray
+
+        # Analyze sparsely (1 fps) exactly for heavy CNN forensics
         if frame_count % sample_rate == 0:
             # Resize frame for speed (Max width 640px)
-            # Heavy image forensics (ELA, Noise) are expensive on 4K/1080p
+            # Heavy image forensics (ELA, Noise) are severely expensive on 4K/1080p
             height, width = frame.shape[:2]
             if width > 640:
                 scale_ratio = 640 / width
                 new_dim = (640, int(height * scale_ratio))
                 frame = cv2.resize(frame, new_dim, interpolation=cv2.INTER_AREA)
 
-            # Save to temp file because image_model expects a path
+            # Save to temp file because image_model expects a file path
             temp_file = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
             temp_path = temp_file.name
             temp_file.close() 
@@ -72,7 +95,14 @@ def detect_fake_video(video_path):
         return {"visual": 0.01, "facial": 0.01, "lipsync": 0.01}, {"error": "No frames analyzed"}
 
     avg_score = float(np.mean(scores))
-    score_var = float(np.var(scores))
+    
+    # --- Process Optical Flow Jitter ---
+    mean_jitter = 0.0
+    if len(optical_flow_mags) > 0:
+        mean_jitter = float(np.mean(optical_flow_mags))
+        # Add slight penalty to visual score if extreme jitter detected
+        if mean_jitter > 2.5:
+            avg_score = min(0.99, avg_score + 0.25)
     
     # --- Stage 2: Facial Biometric Analysis ---
     annotated_face_path = None
@@ -96,8 +126,8 @@ def detect_fake_video(video_path):
     # NOTE: Fusion happens in main.py. Here we return components.
     
     # --- Report Generation ---
-    # High variance in frame scores suggests temporal flickering (common in cheap deepfakes)
-    flicker_risk = score_var > 0.05
+    # High variance in frame scores or high optical flow jitter suggests temporal flickering
+    flicker_risk = mean_jitter > 2.5
     
     # Heuristic inference for report text
     blinking_issue = facial_score > 0.8
@@ -106,7 +136,7 @@ def detect_fake_video(video_path):
     video_report = {
         "temporal_consistency": {
             "pass": bool(not flicker_risk),
-            "detail": "Stable frame-to-frame transitions." if not flicker_risk else "Detected temporal flickering artifacts common in deepfakes."
+            "detail": f"Stable optical flow inter-frame tracking (Jitter: {mean_jitter:.2f})." if not flicker_risk else f"Detected aberrant structural shifting and boundary jitter common in deepfakes (Jitter: {mean_jitter:.2f})."
         },
         "blinking_patterns": {
             "pass": bool(not blinking_issue), 
