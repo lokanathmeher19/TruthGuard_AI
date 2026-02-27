@@ -17,6 +17,14 @@ window.switchTab = function (event, tabId) {
 };
 
 function displayResult(data, file) {
+    if (!data || !data.checks) {
+        console.error("Invalid server response:", data);
+        const resultSection = document.getElementById('result-section');
+        resultSection.innerHTML = `<div style="padding:20px; color:#FF003C; border:1px solid #FF003C;">Invalid server response format.</div>`;
+        resultSection.style.display = 'block';
+        return;
+    }
+
     const resultSection = document.getElementById('result-section');
     resultSection.style.display = 'block';
 
@@ -26,8 +34,8 @@ function displayResult(data, file) {
     const riskLevel = isFake ? 'CRITICAL - THREAT DETECTED' : 'LOW - AUTHENTIC';
     const icon = isFake ? '<i class="fas fa-biohazard"></i>' : '<i class="fas fa-shield-alt"></i>';
 
-    // Extract Metadata Report
-    const meta = data.checks.metadata.report || {};
+    // Extract Metadata Report safely
+    const meta = (data.checks.metadata && data.checks.metadata.report) ? data.checks.metadata.report : {};
     const hasGPS = meta.gps && meta.gps.includes("Present");
 
     // Helper for granular bars with detailed descriptions
@@ -179,10 +187,11 @@ function displayResult(data, file) {
                 <h4 style="margin-top: 10px; margin-bottom: 5px; color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Detailed Forensic Findings</h4>
 
                 <!-- 1. Metadata Risks -->
+                ${data.checks.metadata ? `
                 <div style="padding: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px; border-left: 4px solid ${data.checks.metadata.pass ? '#00FF41' : '#FFCC00'};">
                     <strong style="font-size: 1.1rem; color: var(--text-main); display:flex; align-items:center; gap:8px;"><i class="fas fa-search" style="color: var(--accent-blue);"></i> Metadata Analysis</strong>
                     <p style="margin: 10px 0 0; font-size: 1rem; color: var(--text-muted);">${data.checks.metadata.detail}</p>
-                </div>
+                </div>` : ''}
 
                 <!-- 2. Visual / Audio Analysis -->
                 ${data.checks.visual ? `
@@ -241,8 +250,8 @@ function displayResult(data, file) {
                     <div class="dynamic-bar-bg" style="height: 15px; margin-bottom: 1.5rem; background: rgba(255,255,255,0.1);">
                         <div style="width: ${data.fake_probability * 100}%; background-color: ${color}; height: 100%; box-shadow: 0 0 15px ${color}99; transition: width 1s ease-in-out;"></div>
                     </div>
-                    <p style="font-style: italic; color: var(--text-muted); font-size: 1.1rem; border-left: 3px solid ${color}88; padding-left: 20px; display: inline-block; max-width: 80%;">
-                        "${data.explanation}"
+                    <p id="explanation-text" style="font-style: italic; color: var(--text-muted); font-size: 1.1rem; border-left: 3px solid ${color}88; padding-left: 20px; display: inline-block; max-width: 80%;">
+                        <!-- Text dynamically added via report safety check -->
                     </p>
                 </div>
             </div>
@@ -251,6 +260,19 @@ function displayResult(data, file) {
     `;
 
     resultSection.innerHTML = resultHTML;
+
+    // Safety check BEFORE accessing data.report
+    const explanationText = document.getElementById('explanation-text');
+    if (explanationText) {
+        if (data.report && data.report.summary) {
+            explanationText.innerText = `"${data.report.summary}"`;
+        } else if (data.explanation) {
+            explanationText.innerText = `"${data.explanation}"`;
+        } else {
+            explanationText.innerText = '"No detailed report available."';
+        }
+    }
+
     resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -363,6 +385,16 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('url', url);
 
             loading.style.display = 'block';
+
+            // Dynamically change loading video based on file type
+            const analysisPlayer = document.getElementById('analysis-video-player');
+            if (analysisPlayer) {
+                if (url.toLowerCase().match(/\.(wav|mp3|ogg|flac|m4a)$/i)) {
+                    analysisPlayer.src = '/frontend/images/voice_clone_video_jarvis.mp4';
+                } else {
+                    analysisPlayer.src = '/frontend/images/analysis_video.mp4';
+                }
+            }
             simulateTerminal();
             resultSection.style.display = 'none';
             resultSection.innerHTML = '';
@@ -435,6 +467,16 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('file', file);
 
         loading.style.display = 'block';
+
+        // Dynamically change loading video based on file type
+        const analysisPlayer = document.getElementById('analysis-video-player');
+        if (analysisPlayer) {
+            if (file.type.startsWith('audio/') || file.name.match(/\.(wav|mp3|ogg|flac|m4a)$/i)) {
+                analysisPlayer.src = '/frontend/images/voice_clone_video_jarvis.mp4';
+            } else {
+                analysisPlayer.src = '/frontend/images/analysis_video.mp4';
+            }
+        }
         simulateTerminal();
         resultSection.style.display = 'none';
         resultSection.innerHTML = '';

@@ -46,3 +46,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Dynamic Analysis Artifacts
+frontend/waveform_*.png
+frontend/annotated_*.jpg
+frontend/annotated_*.png
+frontend/lipsync_*.png

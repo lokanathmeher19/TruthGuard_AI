@@ -156,13 +156,5 @@ def detect_fake_video(video_path):
         "facial": float(facial_score),
         "lipsync": float(lipsync_score)
     }
-    
-    # Semantic Fallback for user testing 
-    filename_lower = os.path.basename(video_path).lower()
-    if any(cue in filename_lower for cue in ['fake', 'deepfake', 'synthetic', 'heygen', 'synthesia']):
-        components['visual'] = 0.99
-        components['facial'] = 0.99
-        components['lipsync'] = 0.99
-
     return components, video_report
 

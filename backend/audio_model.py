@@ -89,11 +89,6 @@ def detect_fake_audio(audio_path):
             fake_score += 0.10 # Penalty for being too clean
             
         final_score = min(max(fake_score, 0.01), 0.99)
-        
-        # Heuristic overrides for testing samples natively
-        filename_lower = os.path.basename(audio_path).lower()
-        if any(cue in filename_lower for cue in ['fake', 'deepfake', 'synthetic', 'elevenlabs', 'playht', 'cloned']):
-            final_score = 0.98
 
         # --- Graph Visualization ---
         plt.figure(figsize=(10, 3))

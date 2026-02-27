@@ -10,7 +10,7 @@
     <meta name="author" content="Lokanath Meher">
     <title>Threatsys | TruthGuard AI</title>
     <link rel="icon" type="image/svg+xml" href="/frontend/images/logo_concept1.svg">
-    <link rel="stylesheet" href="/frontend/styles.css">
+    <link rel="stylesheet" href="/frontend/styles.css?v=8.1">
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -96,10 +96,21 @@
                 <!-- Image Forensics -->
                 <div class="media-category">
                     <div class="media-card">
-                        <div class="media-viewport image-viewport">
-                            <i class="fas fa-image fa-3x bg-icon"></i>
+                        <div class="media-viewport image-viewport" style="position: relative;">
+                            <video src="/frontend/images/image_forensics_video.mp4" autoplay loop muted
+                                class="bg-video"></video>
                             <span class="media-label label-fake"><i class="fas fa-biohazard"></i> Deepfake</span>
                             <div class="overlay-scan"></div>
+
+                            <!-- Unique Live Scanning UI for Image Forensics -->
+                            <div class="live-image-scan-bar"></div>
+                            <span
+                                style="position: absolute; top: 15px; right: 15px; background: rgba(0, 255, 65, 0.2); border: 1px solid #00FF41; color: #00FF41; font-size: 0.6rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-family: 'Space Grotesk', monospace; text-transform: uppercase; display: flex; align-items: center; gap: 5px;">
+                                <div
+                                    style="width: 6px; height: 6px; background: #00FF41; border-radius: 50%; box-shadow: 0 0 5px #00FF41; animation: pulse 1s infinite;">
+                                </div>
+                                GAN MATRIX
+                            </span>
                         </div>
                         <div class="media-info">
                             <h3>Image Forensics</h3>
@@ -114,14 +125,16 @@
                 <div class="media-category">
                     <div class="media-card">
                         <div class="media-viewport video-viewport">
-                            <i class="fas fa-film fa-3x bg-icon"></i>
+                            <video src="/frontend/images/analysis_video.mp4" autoplay loop muted
+                                class="bg-video"></video>
                             <span class="media-label label-fake"><i class="fas fa-biohazard"></i> Face Swap</span>
                             <div class="overlay-scan"></div>
                         </div>
                         <div class="media-info">
                             <h3>Video Forensics</h3>
                             <h4>Temporal Anomalies</h4>
-                            <p>Pinpoints frame-by-frame inconsistencies, face-swapping boundaries, and AI interpolation
+                            <p>Pinpoints frame-by-frame inconsistencies, face-swapping boundaries, and AI
+                                interpolation
                                 errors.</p>
                         </div>
                     </div>
@@ -130,15 +143,27 @@
                 <!-- Audio Analysis -->
                 <div class="media-category">
                     <div class="media-card">
-                        <div class="media-viewport audio-viewport">
-                            <i class="fas fa-wave-square fa-3x bg-icon"></i>
+                        <div class="media-viewport audio-viewport" style="position: relative;">
+                            <video src="/frontend/images/voice_clone_video_scanner.mp4" autoplay loop muted
+                                class="bg-video"></video>
                             <span class="media-label label-fake"><i class="fas fa-biohazard"></i> Voice Clone</span>
                             <div class="overlay-scan"></div>
+
+                            <!-- Unique Live Scanning UI for Audio Forensics -->
+                            <div class="live-audio-scan-bar"></div>
+                            <span
+                                style="position: absolute; top: 15px; left: 15px; background: rgba(255, 0, 60, 0.2); border: 1px solid #FF003C; color: #FF003C; font-size: 0.6rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-family: 'Space Grotesk', monospace; text-transform: uppercase; display: flex; align-items: center; gap: 5px;">
+                                <div
+                                    style="width: 6px; height: 6px; background: #FF003C; border-radius: 50%; box-shadow: 0 0 5px #FF003C; animation: pulse 1s infinite;">
+                                </div>
+                                LIVE ANALYSIS
+                            </span>
                         </div>
                         <div class="media-info">
                             <h3>Audio Forensics</h3>
                             <h4>Audio Cloning (TTS)</h4>
-                            <p>Identifies machine-like spectral flatness, unnatural pitch stability, and lack of organic
+                            <p>Identifies machine-like spectral flatness, unnatural pitch stability, and lack of
+                                organic
                                 breathing.</p>
                         </div>
                     </div>
@@ -308,6 +333,16 @@
                 <div class="cyber-spinner">
                     <div class="spinner-outer"></div>
                     <div class="spinner-inner"></div>
+                </div>
+
+                <div class="analysis-video-container"
+                    style="max-width: 650px; margin: 20px auto; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 0 30px rgba(0, 229, 255, 0.2); position: relative;">
+                    <video id="analysis-video-player" src="/frontend/images/analysis_video.mp4" autoplay loop muted
+                        class="analysis-vid"
+                        style="width: 100%; display: block; object-fit: cover; max-height: 300px;"></video>
+                    <div class="overlay-scan"
+                        style="background: linear-gradient(to bottom, transparent, rgba(0, 229, 255, 0.2) 50%, transparent);">
+                    </div>
                 </div>
 
                 <!-- Command Center Terminal Output -->

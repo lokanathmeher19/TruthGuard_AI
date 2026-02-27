@@ -256,5 +256,6 @@ def check_metadata(file_path):
 
     except Exception as e:
         print(f"Metadata error: {e}")
-        return 0.5, {"error": "Metadata extraction failed"}
+        metadata_analysis["error"] = "Metadata extraction encountered issues"
+        return score, metadata_analysis
 

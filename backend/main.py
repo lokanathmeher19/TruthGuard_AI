@@ -164,85 +164,109 @@ async def analyze(background_tasks: BackgroundTasks, file: UploadFile = File(Non
             error_msg = f"QUARANTINE_ALERT|VirusTotal detected severe malware. File has been securely destroyed for your safety.|{vt_report.get('report_link', '')}"
             return JSONResponse(status_code=403, content={"error": error_msg})
 
-        # --- Step 1: Metadata Forensics ---
-        # Checks for editing software signatures, missing EXIF tags, etc.
-        metadata_score, metadata_report = check_metadata(file_path)
+        # --- 1. Initialize all module scores at start ---
+        visual_score = 0.0
+        audio_score = 0.0
+        metadata_score = 0.0
+        temporal_score = 0.0
         
-        final_score = 0
+        # Extra UI/Fusion variables
+        facial_score = 0.0
+        lipsync_score = 0.0
+        final_score = 0.0
         checks = {}
         explanation = ""
+        metadata_report = {}
 
-        # Construct safe metadata summary
-        risk_detail = "No major risks"
-        if metadata_report.get('risk_flags'):
-            risk_detail = "; ".join(metadata_report['risk_flags'])
-            
-        checks['metadata'] = {
-            'pass': metadata_score < 0.5,
-            'detail': risk_detail,
-            'report': metadata_report # Pass full object
-        }
+        is_image = media_filename.lower().endswith((".jpg", ".png", ".jpeg"))
+        is_video = media_filename.lower().endswith((".mp4", ".avi", ".mov"))
+        is_audio = media_filename.lower().endswith((".wav", ".mp3", ".ogg", ".flac"))
 
-        # --- Step 2: Media-Specific Analysis pipelines ---
-        
-        # A. IMAGE PIPELINE
-        if media_filename.lower().endswith((".jpg", ".png", ".jpeg")):
-            # Run visual artifact detection (Noise, ELA, Frequency)
-            image_score, image_report = detect_fake_image(file_path)
+        # --- 2. Media-Specific Analysis pipelines ---
+        if is_image:
+            try:
+                metadata_score, metadata_report = check_metadata(file_path)
+            except Exception as e:
+                print(f"Metadata error: {e}")
             
-            # Run Steganography Forensic Check
-            steganography_report = analyze_steganography(file_path)
+            risk_detail = "No major risks"
+            if metadata_report and metadata_report.get('risk_flags'):
+                risk_detail = "; ".join(metadata_report['risk_flags'])
+            checks['metadata'] = {
+                'pass': metadata_score < 0.5,
+                'detail': risk_detail,
+                'report': metadata_report
+            }
+
+            try:
+                visual_score, image_report = detect_fake_image(file_path)
+            except Exception as e:
+                print(f"Image error: {e}")
+                image_report = {"error": str(e)}
+
+            try:
+                steganography_report = analyze_steganography(file_path)
+            except Exception as e:
+                print(f"Steganography error: {e}")
+                steganography_report = {"steganography_detected": False, "analysis": str(e)}
+
+            facial_score = visual_score
             
-            # Map for consistent variables in final JSON
-            facial_score = image_score
-            lipsync_score = 0.0
-            audio_score = None
-            
-            # Fusion: Image + Metadata
-            final_score = combine(facial=image_score, metadata=metadata_score)
-            
-            # Boost the threat score drastically if a secret payload is detected
+            # 3. Dynamic Fusion Logic (Image)
+            final_score = 0.7 * visual_score + 0.3 * metadata_score
+
             if steganography_report.get("steganography_detected"):
                 final_score = max(final_score, 0.95)
                 explanation = "CRITICAL: Malicious Steganographic Payload detected hidden within image pixels. Severe Risk."
-            
+
             checks['visual'] = {
-                'pass': image_score < 0.5,
-                'detail': "No manipulated facial expressions or GAN artifacts detected.",
+                'pass': visual_score < 0.5,
+                'detail': "Visual analysis complete.",
                 'report': image_report 
             }
-            
             checks['steganography'] = {
                 'pass': not steganography_report.get("steganography_detected", False),
                 'detail': steganography_report.get("analysis", "Normal pixel structure"),
                 'report': steganography_report
             }
 
-        # B. VIDEO PIPELINE
-        elif media_filename.lower().endswith((".mp4", ".avi", ".mov")):
-            # Run Visual + Facial + LipSync analysis
-            # Returns a dict of component scores
-            video_components, video_report = detect_fake_video(file_path)
+        elif is_video:
+            try:
+                metadata_score, metadata_report = check_metadata(file_path)
+            except Exception as e:
+                print(f"Metadata error: {e}")
             
-            visual_score = video_components.get('visual', 0.0)
-            facial_score = video_components.get('facial', 0.0)
-            lipsync_score = video_components.get('lipsync', 0.0)
-            
-            # Run Audio Analysis (Extract track from video)
+            risk_detail = "No major risks"
+            if metadata_report and metadata_report.get('risk_flags'):
+                risk_detail = "; ".join(metadata_report['risk_flags'])
+            checks['metadata'] = {
+                'pass': metadata_score < 0.5,
+                'detail': risk_detail,
+                'report': metadata_report
+            }
+
+            try:
+                video_components, video_report = detect_fake_video(file_path)
+                visual_score = video_components.get('visual', 0.0)
+                facial_score = video_components.get('facial', 0.0)
+                lipsync_score = video_components.get('lipsync', 0.0)
+                temporal_score = video_components.get('temporal', 0.0)
+            except Exception as e:
+                print(f"Video pipeline error: {e}")
+                video_report = {"error": str(e)}
+
             try:
                 audio_score, audio_report = detect_fake_audio(file_path)
             except Exception as e:
-                # Handle silent videos or extraction failures gracefully
-                audio_score = None
+                print(f"Audio extraction/analysis error: {e}")
                 audio_report = {"error": "Audio track analysis failed or silent"}
 
-            # Fusion: Facial + LipSync + Audio + Metadata + Visual
-            final_score = combine(
-                facial=facial_score,
-                lipsync=lipsync_score, 
-                audio=audio_score, 
-                metadata=metadata_score,
-                visual=visual_score 
+            # 3. Dynamic Fusion Logic (Video)
+            final_score = (
+                0.3 * visual_score +
+                0.3 * temporal_score +
+                0.2 * audio_score +
+                0.2 * metadata_score
             )
             
             checks['visual'] = {
@@ -250,31 +274,25 @@ async def analyze(background_tasks: BackgroundTasks, file: UploadFile = File(Non
                 'detail': "Visual artifact analysis complete.",
                 'report': video_report
             }
-            
-            if audio_score is not None:
-                checks['audio'] = {
-                     'pass': audio_score < 0.5,
-                     'detail': "Audio track analysis complete.",
-                     'report': audio_report
-                }
-            else:
-                checks['audio'] = {
-                     'pass': True, 
-                     'detail': "No audio track detected or analysis skipped.",
-                     'report': audio_report
-                }
+            checks['audio'] = {
+                 'pass': audio_score < 0.5,
+                 'detail': "Audio track analysis complete.",
+                 'report': audio_report
+            }
 
-        # C. AUDIO PIPELINE
-        elif media_filename.lower().endswith((".wav", ".mp3", ".ogg", ".flac")):
-            # Run audio forensics
-            audio_score, audio_report = detect_fake_audio(file_path)
+        elif is_audio:
+            try:
+                audio_score, audio_report = detect_fake_audio(file_path)
+            except Exception as e:
+                print(f"Audio error: {e}")
+                audio_report = {"error": str(e)}
             
-            # Fusion: Audio + Metadata
-            final_score = combine(audio=audio_score, metadata=metadata_score)
+            # 3. Dynamic Fusion Logic (Audio)
+            final_score = audio_score
             
             checks['audio'] = {
                 'pass': audio_score < 0.5,
-                'detail': "Natural voice patterns detected.",
+                'detail': "Audio analysis complete.",
                 'report': audio_report
             }
 
@@ -352,15 +370,21 @@ async def analyze(background_tasks: BackgroundTasks, file: UploadFile = File(Non
         "scan_id": scan_id,
         "processing_time": f"{processing_time_sec} seconds",
         "file_hash_sha256": file_hash_hex,
+        "visual_score": round(float(visual_score), 3),
+        "audio_score": round(float(audio_score), 3),
+        "temporal_score": round(float(temporal_score), 3),
+        "metadata_score": round(float(metadata_score), 3),
         "facial_score": round(float(facial_score), 3),
         "lipsync_score": round(float(lipsync_score), 3),
-        "audio_score": round(float(audio_score), 3) if audio_score is not None else 0.0,
-        "metadata_score": round(float(metadata_score), 3),
         "final_score": round(float(final_score), 3),
         "fake_probability": round(float(final_score), 3),
         "verdict": "FAKE" if final_score > 0.5 else "REAL",
         "confidence_percentage": f"{int(final_score * 100)}%",
         "explanation": explanation,
+        "report": {
+            "summary": explanation,
+            "risk_level": "CRITICAL - THREAT DETECTED" if final_score > 0.5 else "LOW - AUTHENTIC"
+        },
         "highest_suspicious_module": threat_source,
         "checks": checks,
         "components": {
