@@ -372,6 +372,9 @@ main {
 
 .image-viewport {
     background-color: #0b111e;
+    background-image: url('images/deepfake_face.png');
+    background-size: cover;
+    background-position: center;
 }
 
 .image-viewport .bg-icon {
@@ -390,6 +393,9 @@ main {
 
 .audio-viewport {
     background-color: #0b111e;
+    background-image: url('images/voice_clone_audio.png');
+    background-size: cover;
+    background-position: center;
 }
 
 .audio-viewport .bg-icon {

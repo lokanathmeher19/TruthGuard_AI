@@ -1,5 +1,7 @@
 # TruthGuard AI
 
+![alt text](02.webp)
+
 **TruthGuard** is a multi-modal forensic system designed to detect synthetic media (deepfakes) across image, video, and audio formats. It analyzes files for manipulated facial expressions, lip-sync mismatches, synthetic voice patterns, and metadata anomalies to provide a confidence score and explainable verdict in near real-time.
 
 ## Features
