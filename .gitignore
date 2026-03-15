@@ -1,54 +1,27 @@
-# Virtual environment
+# Virtual Environments
 venv/
 env/
-.venv/
-Scripts/
+.env
 
-# Python cache
+# Python Cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
-# Uploads directory (user data, PDFs, mp4 files)
-uploads/
+# Heavy AI Assets
+models/
+*.pth
+*.pt
+*.bin
+*.pkl
+face_landmarker.task
 
-# Database files
+# Local DB & Temp
 *.db
-*.sqlite3
+uploads/
+/tmp/
 
-# OS generated files
+# System Files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-
-# Dynamic Analysis Artifacts
-frontend/waveform_*.png
-frontend/annotated_*.jpg
-frontend/annotated_*.png
-frontend/lipsync_*.png
