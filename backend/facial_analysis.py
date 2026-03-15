@@ -5,6 +5,7 @@ import uuid
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from backend.config import STATIC_DIR, UPLOAD_DIR, IS_VERCEL
 
 # Set absolute path for the downloaded face landmarker model
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "face_landmarker.task")
@@ -77,11 +78,14 @@ def analyze_facial_landmarks(video_path):
                         cv2.circle(annotated_frame, (x, y), 1, (0, 255, 0), -1)
                         
                     filename = f"annotated_{uuid.uuid4().hex[:8]}.jpg"
-                    save_path = os.path.join("frontend", filename)
-                    os.makedirs("frontend", exist_ok=True)
+                    if IS_VERCEL:
+                        save_path = os.path.join(UPLOAD_DIR, filename)
+                        annotated_face_url = f"/frontend/generated/{filename}"
+                    else:
+                        save_path = os.path.join(STATIC_DIR, filename)
+                        annotated_face_url = f"/frontend/{filename}"
+                        
                     cv2.imwrite(save_path, annotated_frame)
-                    
-                    annotated_face_url = f"/frontend/{filename}"
                     saved_annotated = True
                 
                 # Normalize and collect the facial landmark geometry representation 

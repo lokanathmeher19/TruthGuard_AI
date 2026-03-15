@@ -33,8 +33,8 @@ class DeepfakeDetectionEngine:
         self.model = DeepfakeCNN()
         self.weights_loaded = False
         
-        # Load real trained weights from deepfake_model.pth
-        model_path = os.path.join("models", "deepfake_model.pth")
+        from backend.config import BASE_DIR
+        model_path = os.path.join(BASE_DIR, "models", "deepfake_model.pth")
         
         if os.path.exists(model_path):
             try:

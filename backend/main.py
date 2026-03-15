@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session 
 
-# Database and Reports
+from backend.config import UPLOAD_DIR, STATIC_DIR, IS_VERCEL
 from backend.database import SessionLocal, ScanResult, get_db
 from backend.report import generate_pdf_report
 from backend.steganography import analyze_steganography
@@ -91,11 +91,12 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"error": "Internal Server Error", "detail": str(exc)},
     )
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 # Mount static files for serving the frontend
-app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+if not IS_VERCEL:
+    app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+else:
+    # On Vercel, static files are handled by the rewriter, but we might host generated assets
+    app.mount("/frontend/generated", StaticFiles(directory=UPLOAD_DIR), name="generated")
 
 @app.get("/")
 async def read_root():

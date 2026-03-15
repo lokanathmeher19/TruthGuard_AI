@@ -309,10 +309,11 @@ function simulateTerminal() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // PERMANENT LOCALHOST CONNECTION
-    // This absolutely guarantees that the frontend will always connect to your background TruthGuard server.
-    const API_BASE = 'http://127.0.0.1:8000';
-    const WS_BASE = 'ws://127.0.0.1:8000';
+    // DYNAMIC API CONNECTION
+    // Uses the current window location to determine the API base, fallback to localhost for development.
+    const API_BASE = window.location.origin;
+    const WS_BASE = window.location.origin.replace(/^http/, 'ws');
+
     const dropAreas = document.querySelectorAll('.drop-area');
     const fileInputs = document.querySelectorAll('.file-input');
     const resultSection = document.getElementById('result-section');

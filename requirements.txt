@@ -13,3 +13,5 @@ exifread
 Pillow
 matplotlib
 mediapipe
+moviepy
+imageio-ffmpeg

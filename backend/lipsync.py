@@ -8,6 +8,7 @@ import os
 import uuid
 import tempfile
 import warnings
+from backend.config import STATIC_DIR, UPLOAD_DIR, IS_VERCEL
 
 # Use Agg backend for matplotlib to avoid UI threading errors globally
 matplotlib.use('Agg')
@@ -152,12 +153,15 @@ def detect_lipsync_mismatch(video_path):
     plt.tight_layout()
     
     filename = f"lipsync_{uuid.uuid4().hex[:8]}.png"
-    save_path = os.path.join("frontend", filename)
-    os.makedirs("frontend", exist_ok=True)
+    if IS_VERCEL:
+        save_path = os.path.join(UPLOAD_DIR, filename)
+        graph_url = f"/frontend/generated/{filename}"
+    else:
+        save_path = os.path.join(STATIC_DIR, filename)
+        graph_url = f"/frontend/{filename}"
+        
     plt.savefig(save_path)
     plt.close()
-    
-    graph_url = f"/frontend/{filename}"
     
     # --- 5. Detection Scoring ---
     # In Deepfakes (HeyGen, D-ID, Native face-swaps), generating a mouth exactly correlated to audio is hard.

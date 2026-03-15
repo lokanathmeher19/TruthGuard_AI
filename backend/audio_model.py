@@ -6,6 +6,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import uuid
 import warnings
+from backend.config import STATIC_DIR, UPLOAD_DIR, IS_VERCEL
 
 # Use Agg backend for matplotlib to avoid UI threading errors globally
 matplotlib.use('Agg')
@@ -109,12 +110,15 @@ def detect_fake_audio(audio_path):
         plt.tight_layout()
         
         filename = f"waveform_{uuid.uuid4().hex[:8]}.png"
-        save_path = os.path.join("frontend", filename)
-        os.makedirs("frontend", exist_ok=True)
+        if IS_VERCEL:
+            save_path = os.path.join(UPLOAD_DIR, filename)
+            graph_url = f"/frontend/generated/{filename}"
+        else:
+            save_path = os.path.join(STATIC_DIR, filename)
+            graph_url = f"/frontend/{filename}"
+            
         plt.savefig(save_path, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
         plt.close()
-        
-        graph_url = f"/frontend/{filename}"
 
         # --- Detailed PDF/UI Report Data ---
         audio_report = {
