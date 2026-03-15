@@ -4,7 +4,7 @@ sqlalchemy>=2.0.30
 python-multipart>=0.0.9
 reportlab>=4.2.0
 requests>=2.32.0
-numpy>=1.26.4
+numpy>=1.23.0
 --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
 torch==2.2.0+cpu
 torchvision==0.17.0+cpu
