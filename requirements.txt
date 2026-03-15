@@ -3,11 +3,10 @@ uvicorn
 sqlalchemy
 python-multipart
 reportlab
-requests==2.28.1
-numpy==1.26.3
---index-url https://download.pytorch.org/whl/cpu
-torch==2.2.0
-torchvision==0.17.0
+requests
+numpy
+torch==2.2.0+cpu
+torchvision==0.17.0+cpu
 opencv-python-headless
 librosa
 exifread
@@ -16,3 +15,4 @@ matplotlib
 mediapipe
 moviepy
 imageio-ffmpeg
+--extra-index-url https://download.pytorch.org/whl/cpu
