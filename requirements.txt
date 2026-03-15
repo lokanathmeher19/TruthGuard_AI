@@ -1,9 +1,9 @@
 fastapi
 uvicorn
-sqlalchemy
-python-multipart
-reportlab
 requests
 numpy
-Pillow
+pydantic
+python-multipart
+sqlalchemy
+pillow
 exifread

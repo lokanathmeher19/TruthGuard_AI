@@ -1,27 +1,10 @@
-# Virtual Environments
-venv/
-env/
-.env
-
-# Python Cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Heavy AI Assets
-models/
-*.pth
+venv
+__pycache__
 *.pt
 *.bin
 *.pkl
-face_landmarker.task
-
-# Local DB & Temp
+models
+datasets
+node_modules
 *.db
-uploads/
-/tmp/
-
-# System Files
-.DS_Store
-Thumbs.db
+.env
