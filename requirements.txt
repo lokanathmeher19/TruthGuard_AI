@@ -5,9 +5,8 @@ python-multipart
 reportlab
 requests
 numpy
---find-links https://download.pytorch.org/whl/cpu/torch_stable.html
-torch==2.2.0+cpu
-torchvision==0.17.0+cpu
+torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
+torchvision==0.17.0 --index-url https://download.pytorch.org/whl/cpu
 opencv-python-headless
 librosa
 exifread
