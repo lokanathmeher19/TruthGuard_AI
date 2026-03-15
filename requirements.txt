@@ -3,10 +3,11 @@ uvicorn
 sqlalchemy
 python-multipart
 reportlab
-requests
-numpy
-torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
-torchvision==0.17.0 --index-url https://download.pytorch.org/whl/cpu
+requests==2.28.1
+numpy==1.26.3
+--index-url https://download.pytorch.org/whl/cpu
+torch==2.2.0
+torchvision==0.17.0
 opencv-python-headless
 librosa
 exifread
